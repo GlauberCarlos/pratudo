@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "title": "Lasanha à Bolonhesa",
+    "category": "Almoço",
+    "description": "Massa caseira com molho bolonhesa tradicional e bastante queijo.",
+    "prepTime": "45 min",
+    "ingredients": ["Massa de lasanha", "Carne moída", "Molho de tomate", "Queijo mussarela"]
+  },
+  {
+    "id": 2,
+    "title": "Panqueca de Aveia",
+    "category": "Café da Manhã",
+    "description": "Opção saudável e rápida para começar o dia.",
+    "prepTime": "15 min",
+    "ingredients": ["1 Banana", "1 Ovo", "2 colheres de Aveia"]
+  },
+  {
+    "id": 3,
+    "title": "Sopa de Legumes",
+    "category": "Jantar",
+    "description": "Sopa leve e nutritiva com legumes da estação.",
+    "prepTime": "30 min",
+    "ingredients": ["Cenoura", "Batata", "Chuchu", "Caldo de legumes"]
+  }
+]
