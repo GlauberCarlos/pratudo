@@ -16,6 +16,7 @@ export default function RecipeNew({ onAdd }) {
 
     // Monta o objeto da nova receita
     const newRecipe = {
+      id: Date.now(),
       title,
       category,
       description,

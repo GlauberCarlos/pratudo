@@ -1,71 +1,111 @@
-import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 
+import { useRecipes } from './hooks/useRecipes';
+import { useAuth } from './hooks/useAuth';
+
+import PrivateRoute from './components/PrivateRoute';
+
 import Home from './pages/Home';
+import MyRecipes from './pages/MyRecipes';
 import RecipeWeek from './pages/RecipeWeek';
 import RecipeNew from './pages/RecipeNew';
 import RecipeEdit from './pages/RecipeEdit';
 import RecipeDetails from './pages/RecipeDetails';
-
-import initialRecipes from './data/recipes.json'
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Profile from './pages/Profile';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminRoute from './components/AdminRoute';
 
 function App() {
-  const [recipes, setRecipes] = useState(() => {
-    const savedRecipes = localStorage.getItem('@my-menu:recipes');
-    if (savedRecipes) {
-      return JSON.parse(savedRecipes);
-    }
-    return initialRecipes; // Caso seja o primeiro acesso do usuário
-  });
-
-  // 2. Salva no localStorage toda vez que o estado 'recipes' mudar
-  useEffect(() => {
-    localStorage.setItem('@my-menu:recipes', JSON.stringify(recipes));
-  }, [recipes]);
-
-  // Funções do CRUD
-  const handleAddRecipe = (newRecipe) => {
-    const recipeWithId = { ...newRecipe, id: Date.now() };
-    setRecipes((prevRecipes) => [...prevRecipes, recipeWithId]);
-  };
-
-  const handleUpdateRecipe = (updatedRecipe) => {
-    setRecipes((prevRecipes) =>
-      prevRecipes.map((item) => (item.id === updatedRecipe.id ? updatedRecipe : item))
-    );
-  };
-
-  const handleDeleteRecipe = (id) => {
-    setRecipes((prevRecipes) => prevRecipes.filter((item) => item.id !== id));
-  };
+  const { recipes, addRecipe, updateRecipe, deleteRecipe } = useRecipes();
+  const { isLoggedIn, user } = useAuth();
 
   return (
     <BrowserRouter>
       <nav style={{ padding: '15px', backgroundColor: '#f0f0f0', marginBottom: '20px' }}>
-        <Link to="/" style={{ marginRight: '15px' }}>Página Inicial</Link>
-        <Link to="/menu" style={{ marginRight: '15px' }}>Meu Cardápio</Link>
-        <Link to="/menu/new" style={{ marginRight: '15px' }}>Adicionar Receita</Link>
+        <Link to="/" style={{ marginRight: '15px' }}>Página Inicial</Link>        
+
+        {isLoggedIn &&
+          <>
+            <Link to="/menu" style={{ marginRight: '15px' }}>Cardápio Semanal</Link>
+            <Link to="/my-recipes" style={{ marginRight: '15px' }}>Minhas Receitas</Link>        
+          </>
+        }       
+
+        {user?.role === 'admin' && (
+          <Link to="/admin" style={{ color: '#d32f2f', fontWeight: 'bold' }}>Painel Admin</Link>
+        )}
+
+        {isLoggedIn ? (
+          <Link to="/profile" style={{ marginRight: '15px' }}>Meu Perfil</Link>
+        ) : (
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
+            <Link to="/login">Entrar</Link>
+            <Link to="/register">Cadastrar</Link>
+          </div>
+        )
+        }
       </nav>
 
-      <div style={{ padding: '20px' }}>
+      <div>
         <Routes>
+          {/* rotas livres */}
           <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* rotas protegidas */}            
           <Route 
-            path="/menu" 
-            element={<RecipeWeek recipes={recipes} onDelete={handleDeleteRecipe} />} 
-          />
+            path="/profile"
+            element={
+              <PrivateRoute>
+                <Profile />
+              </PrivateRoute>
+            }/>
           <Route 
-            path="/menu/new" 
-            element={<RecipeNew onAdd={handleAddRecipe} />} 
-          />
+            path="/my-recipes"
+            element={
+              <PrivateRoute>
+                <MyRecipes recipes={recipes} onDelete={deleteRecipe} />
+              </PrivateRoute>
+            }/>
           <Route 
-            path="/menu/:id" 
-            element={<RecipeDetails recipes={recipes} />} 
-          />
+            path="/menu"
+            element={
+              <PrivateRoute>
+                <RecipeWeek recipes={recipes} />
+              </PrivateRoute>
+            }/>
           <Route 
-            path="/menu/:id/edit" 
-            element={<RecipeEdit recipes={recipes} onUpdate={handleUpdateRecipe} />} 
-          />
+            path="/menu/:id"
+            element={
+              <PrivateRoute>
+                <RecipeDetails recipes={recipes} />
+              </PrivateRoute>
+            }/>
+          <Route 
+            path="/menu/new"
+            element={
+              <PrivateRoute>
+                <RecipeNew onAdd={addRecipe} />
+              </PrivateRoute>
+            }/>
+          <Route 
+            path="/menu/:id/edit"
+            element={
+              <PrivateRoute>
+                <RecipeEdit recipes={recipes} onUpdate={updateRecipe} />
+              </PrivateRoute>
+            }/>        
+          <Route 
+            path="/admin" 
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            } 
+          />  
         </Routes>
       </div>
     </BrowserRouter>

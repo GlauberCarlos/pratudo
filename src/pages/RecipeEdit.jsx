@@ -32,7 +32,7 @@ export default function RecipeEdit({ recipes, onUpdate }) {
       category,
       description,
       prepTime,
-      ingredients: ingredients.split(',').map((item) => item.trim())
+      ingredients: ingredients.split(',').map((item) => item.trim()) //array e apagar os espacos em branco
     };
 
     onUpdate(updatedRecipe);

@@ -1,42 +1,45 @@
-import { Link } from 'react-router-dom';
+export default function RecipeWeek() {
+  const daysOfWeek = [
+    'Segunda-feira',
+    'Terça-feira',
+    'Quarta-feira',
+    'Quinta-feira',
+    'Sexta-feira',
+    'Sábado',
+    'Domingo'
+  ];
 
-export default function RecipeWeek({ recipes, onDelete }) {
   return (
     <div>
-      <h2>Cardápio da Semana</h2>
-      <p>Confira as receitas cadastradas:</p>
+      <h2>Cardápio Semanal</h2>
+      <p style={{ color: '#666', marginBottom: '20px' }}>
+        Planeje suas refeições para cada dia da semana.
+      </p>
 
-      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginTop: '20px' }}>
-        {recipes.map((recipe) => (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+        {daysOfWeek.map((day) => (
           <div 
-            key={recipe.id} 
+            key={day} 
             style={{ 
-              border: '1px solid #ccc', 
+              border: '2px dashed #ccc', 
               borderRadius: '8px', 
-              padding: '16px', 
-              width: '260px',
-              backgroundColor: '#fff'
+              padding: '20px', 
+              minHeight: '160px',
+              backgroundColor: '#fafafa',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
             }}
           >
-            <h3>{recipe.title}</h3>
+            <h3 style={{ marginTop: 0, color: '#333' }}>{day}</h3>
             
-            <span style={{ fontSize: '12px', background: '#eee', padding: '2px 6px', borderRadius: '4px' }}>
-              {recipe.category}
-            </span>
-            
-            <p>{recipe.description}</p>
-            <small>⏱️ Tempo: {recipe.prepTime}</small>
-
-            <div style={{ marginTop: '15px', display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <Link to={`/menu/${recipe.id}`}>Detalhes</Link> | 
-              <Link to={`/menu/${recipe.id}/edit`}>Editar</Link> | 
-              <button 
-                onClick={() => onDelete(recipe.id)}
-                style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer', textDecoration: 'underline' }}
-              >
-                Excluir
-              </button>
+            <div style={{ textAlign: 'center', padding: '10px', color: '#888' }}>
+              <p style={{ margin: 0, fontSize: '14px' }}>Nenhuma receita selecionada</p>
             </div>
+
+            <button style={{ padding: '6px 12px', cursor: 'pointer', alignSelf: 'flex-start', marginTop: '10px' }}>
+              + Adicionar Receita
+            </button>
           </div>
         ))}
       </div>
