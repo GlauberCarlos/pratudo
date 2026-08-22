@@ -1,32 +1,12 @@
-import { useParams, Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
-export default function RecipeDetails({recipes}) {
+export default function RecipeDetails({ recipes = [] }) {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const recipe = recipes.find((item) => item.id === Number(id));
-
-  const [comments, setComments] = useState([
-    { id: 1, author: 'Maria', text: 'Ficou excelente! Adicionei um pouco mais de queijo.' },
-    { id: 2, author: 'João', text: 'Receita rápida e prática para o dia a dia.' }
-  ]);
-
-  const [newCommentText, setNewCommentText] = useState('');
-
-  const handleAddComment = (e) => {
-    e.preventDefault();
-    if (!newCommentText.trim()) return;
-
-    const newCommentObj = {
-      id: Date.now(),
-      author: 'Visitante',
-      text: newCommentText
-    };
-
-    setComments([...comments, newCommentObj]);
-    setNewCommentText('');
-  };
-
   if (!recipe) {
     return (
       <div>
@@ -36,50 +16,112 @@ export default function RecipeDetails({recipes}) {
     );
   }
 
+  const isOwner = user && user.id === recipe.userId;
+
   return (
-    <div style={{ maxWidth: '600px' }}>
-      <Link to="/menu">← Voltar para o Cardápio</Link>
+    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+      {/* Botão de Voltar */}
+      <button
+        onClick={() => navigate(-1)}
+        style={{ marginBottom: '20px', padding: '6px 12px', cursor: 'pointer', backgroundColor: '#f0f0f0', border: '1px solid #ccc', borderRadius: '4px' }}
+      >
+        ← Voltar
+      </button>
 
-      <h1 style={{ marginTop: '15px', marginBottom: '5px' }}>{recipe.title}</h1>
-      <span style={{ fontSize: '12px', background: '#eee', padding: '2px 6px', borderRadius: '4px' }}>
-        {recipe.category}
-      </span>
-      <p style={{ marginTop: '15px' }}>{recipe.description}</p>
-      <p><strong>⏱️ Tempo de Preparo:</strong> {recipe.prepTime}</p>
+      {/* Imagem de Capa e Cabeçalho */}
+      <div style={{ borderRadius: '8px', overflow: 'hidden', marginBottom: '20px', maxHeight: '350px', backgroundColor: '#eee' }}>
+        <img
+          src={recipe.img}
+          alt={recipe.title}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+      </div>
 
-      <h3>Ingredientes:</h3>
-      <ul>
-        {recipe.ingredients.map((ing, index) => (
-          <li key={index}>{ing}</li>
-        ))}
-      </ul>
-
-      <hr style={{ margin: '30px 0' }} />
-
-      <section>
-        <h3>Caixa de Comentários ({comments.length})</h3>
-
-        <form onSubmit={handleAddComment} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-          <textarea
-            rows="3"
-            placeholder="Escreva um comentário sobre esta receita..."
-            value={newCommentText}
-            onChange={(e) => setNewCommentText(e.target.value)}
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', resize: 'vertical' }}
-          />
-          <button type="submit" style={{ width: '160px', padding: '8px', cursor: 'pointer' }}>
-            Enviar Comentário
-          </button>
-        </form>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {comments.map((comment) => (
-            <div key={comment.id} style={{ border: '1px solid #eee', padding: '12px', borderRadius: '6px', backgroundColor: '#f9f9f9' }}>
-              <strong>{comment.author}</strong>
-              <p style={{ margin: '5px 0 0 0', color: '#333' }}>{comment.text}</p>
-            </div>
-          ))}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px' }}>
+        <div>
+          <span style={{ backgroundColor: '#e0f2f1', color: '#00695c', padding: '4px 10px', borderRadius: '12px', fontSize: '13px', fontWeight: 'bold' }}>
+            {recipe.category}
+          </span>
+          <h1 style={{ marginTop: '10px', marginBottom: '5px' }}>{recipe.title}</h1>
+          {recipe.description && (
+            <p style={{ color: '#666', fontSize: '16px', marginTop: 0 }}>{recipe.description}</p>
+          )}
         </div>
+
+        {/* Botão de Editar se for o dono */}
+        {isOwner && (
+          <Link
+            to={`/menu/${recipe.id}/edit`}
+            style={{ padding: '8px 16px', backgroundColor: '#ff9800', color: '#fff', textDecoration: 'none', borderRadius: '4px', fontWeight: 'bold' }}
+          >
+            Editar Receita
+          </Link>
+        )}
+      </div>
+
+      {/* Informações Rápidas (Tempo e Porções) */}
+      <div style={{ display: 'flex', gap: '20px', margin: '20px 0', padding: '15px', backgroundColor: '#f9f9f9', borderRadius: '8px', border: '1px solid #eee' }}>
+        <div>
+          <span style={{ color: '#888', fontSize: '13px', display: 'block' }}>Tempo de Preparo</span>
+          <strong>⏱️ {recipe.prepareTime} minutos</strong>
+        </div>
+        <div style={{ borderLeft: '1px solid #ddd', paddingLeft: '20px' }}>
+          <span style={{ color: '#888', fontSize: '13px', display: 'block' }}>Rendimento</span>
+          <strong>🍽️ {recipe.servings} {recipe.servings === 1 ? 'porção' : 'porções'}</strong>
+        </div>
+      </div>
+
+      {/* Tags de Dieta e Restrições */}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '30px' }}>
+        {recipe.isVegetarian && (
+          <span style={{ backgroundColor: '#e8f5e9', color: '#2e7d32', padding: '4px 10px', borderRadius: '16px', fontSize: '13px' }}>🌱 Vegetariano</span>
+        )}
+        {recipe.isVegan && (
+          <span style={{ backgroundColor: '#c8e6c9', color: '#1b5e20', padding: '4px 10px', borderRadius: '16px', fontSize: '13px' }}>🌿 Vegano</span>
+        )}
+        {recipe.isLactoseFree && (
+          <span style={{ backgroundColor: '#fff3e0', color: '#e65100', padding: '4px 10px', borderRadius: '16px', fontSize: '13px' }}>🥛 Sem Lactose</span>
+        )}
+        {recipe.isGlutenFree && (
+          <span style={{ backgroundColor: '#fff8e1', color: '#f57f17', padding: '4px 10px', borderRadius: '16px', fontSize: '13px' }}>🌾 Sem Glúten</span>
+        )}
+
+        {/* Restrições personalizadas */}
+        {recipe.restrictions && recipe.restrictions.map((tag, index) => (
+          <span key={index} style={{ backgroundColor: '#f5f5f5', color: '#616161', padding: '4px 10px', borderRadius: '16px', fontSize: '13px', border: '1px solid #e0e0e0' }}>
+            🏷️ {tag}
+          </span>
+        ))}
+      </div>
+
+      <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '20px 0' }} />
+
+      {/* Seção de Ingredientes */}
+      <section style={{ marginBottom: '30px' }}>
+        <h3>Ingredientes</h3>
+        {recipe.ingredients && recipe.ingredients.length > 0 ? (
+          <ul style={{ lineHeight: '1.8', paddingLeft: '20px' }}>
+            {recipe.ingredients.map((ingredient, index) => (
+              <li key={index}>{ingredient}</li>
+            ))}
+          </ul>
+        ) : (
+          <p style={{ color: '#888' }}>Nenhum ingrediente informado.</p>
+        )}
+      </section>
+
+      {/* Seção de Modo de Preparo */}
+      <section style={{ marginBottom: '40px' }}>
+        <h3>Modo de Preparo</h3>
+        {recipe.instructions && recipe.instructions.length > 0 ? (
+          <ol style={{ lineHeight: '1.8', paddingLeft: '20px' }}>
+            {recipe.instructions.map((step, index) => (
+              <li key={index} style={{ marginBottom: '10px' }}>{step}</li>
+            ))}
+          </ol>
+        ) : (
+          <p style={{ color: '#888' }}>Nenhuma instrução informada.</p>
+        )}
       </section>
     </div>
   );

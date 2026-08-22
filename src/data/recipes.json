@@ -5,7 +5,12 @@
     "category": "Almoço",
     "description": "Massa caseira com molho bolonhesa tradicional e bastante queijo.",
     "prepTime": "45 min",
-    "ingredients": ["Massa de lasanha", "Carne moída", "Molho de tomate", "Queijo mussarela"]
+    "ingredients": [
+      "Massa de lasanha",
+      "Carne moída",
+      "Molho de tomate",
+      "Queijo mussarela"
+    ]
   },
   {
     "id": 2,
@@ -22,5 +27,34 @@
     "description": "Sopa leve e nutritiva com legumes da estação.",
     "prepTime": "30 min",
     "ingredients": ["Cenoura", "Batata", "Chuchu", "Caldo de legumes"]
+  },
+  {
+    "id": 1787086058952,
+    "userId": 101,
+    "title": "Lasanha de Berinjela",
+    "description": "Lasanha leve, saudável e com molho caseiro.",
+    "category": "Almoço",
+    "img": "https://via.placeholder.com/300x200?text=Lasanha",
+    "prepareTime": 45,
+    "servings": 4,
+    "ingredients": [
+      "2 berinjela grandes",
+      "500g de molho de tomate",
+      "300g de queijo mussarela"
+    ],
+    "instructions": [
+      "Fatie as berinjelas em lâminas finas.",
+      "Grelhe as lâminas por 2 minutos de cada lado.",
+      "Monte em uma travessa alternando molho, berinjela e queijo.",
+      "Leve ao forno por 25 minutos a 180°C."
+    ],
+    "isPublic": true,
+    "rating": 4.8,
+    "ratingCount": 12,
+    "isVegetarian": true,
+    "isVegan": false,
+    "isLactoseFree": false,
+    "isGlutenFree": true,
+    "restrictions": ["Sem Açúcar", "Low Carb"]
   }
 ]

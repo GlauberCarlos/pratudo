@@ -4,27 +4,31 @@ import { useRecipes } from './hooks/useRecipes';
 import { useAuth } from './hooks/useAuth';
 
 import PrivateRoute from './components/PrivateRoute';
+import AdminRoute from './components/AdminRoute';
+import GuestRoute from './components/GuessRoute';
 
 import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Profile from './pages/Profile';
+import AdminDashboard from './pages/AdminDashboard';
 import MyRecipes from './pages/MyRecipes';
 import RecipeWeek from './pages/RecipeWeek';
 import RecipeNew from './pages/RecipeNew';
 import RecipeEdit from './pages/RecipeEdit';
 import RecipeDetails from './pages/RecipeDetails';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Profile from './pages/Profile';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminRoute from './components/AdminRoute';
+import RecipeExplorer from './pages/RecipeExplorer';
 
 function App() {
-  const { recipes, addRecipe, updateRecipe, deleteRecipe } = useRecipes();
+  const { recipes, publicRecipes, addRecipe, updateRecipe, deleteRecipe } = useRecipes();
   const { isLoggedIn, user } = useAuth();
+  const allRecipes = [...recipes, ...publicRecipes];
 
   return (
     <BrowserRouter>
       <nav style={{ padding: '15px', backgroundColor: '#f0f0f0', marginBottom: '20px' }}>
         <Link to="/" style={{ marginRight: '15px' }}>Página Inicial</Link>        
+        <Link to="/explorer" style={{ marginRight: '15px' }}>Explorar</Link>        
 
         {isLoggedIn &&
           <>
@@ -52,10 +56,23 @@ function App() {
         <Routes>
           {/* rotas livres */}
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/explorer" element={<RecipeExplorer />} />
 
           {/* rotas protegidas */}            
+          <Route 
+            path="/login"
+            element={
+              <GuestRoute>
+                <Login />
+              </GuestRoute>
+            }/>
+          <Route 
+            path="/register"
+            element={
+              <GuestRoute>
+                <Register />
+              </GuestRoute>
+            }/>
           <Route 
             path="/profile"
             element={
@@ -81,7 +98,7 @@ function App() {
             path="/menu/:id"
             element={
               <PrivateRoute>
-                <RecipeDetails recipes={recipes} />
+                <RecipeDetails recipes={allRecipes} />
               </PrivateRoute>
             }/>
           <Route 

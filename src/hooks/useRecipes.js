@@ -18,6 +18,7 @@ export function useRecipes() {
   }, [recipes]);
 
   const userRecipes = recipes.filter((recipe) => recipe.userId === user?.id);
+  const publicRecipes = recipes.filter((recipe) => recipe.isPublic);
 
   // Adicionar
   const addRecipe = (newRecipe) => {
@@ -45,7 +46,9 @@ export function useRecipes() {
   };
 
   return {
-    recipes: userRecipes,
+    recipes: 
+    userRecipes,
+    publicRecipes,
     addRecipe,
     updateRecipe,
     deleteRecipe
