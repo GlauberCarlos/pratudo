@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
-import initialRecipes from '../data/recipes.json';
+// import initialRecipes from '../data/recipes.json';
 
 export function useRecipes() {
   const { user } = useAuth();
@@ -10,7 +10,10 @@ export function useRecipes() {
     if (savedRecipes) {
       return JSON.parse(savedRecipes);
     }
-    return initialRecipes.map((r) => ({ ...r, userId: r.userId || 1 }));
+    else {
+      return []
+    }
+    // return initialRecipes.map((r) => ({ ...r, userId: r.userId || 1 }));
   });
 
   useEffect(() => {

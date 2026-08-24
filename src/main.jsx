@@ -1,7 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
+
 import { AuthProvider } from './context/AuthContext.jsx';
+import { FavoritesProvider } from './context/FavoritesContext.jsx';
 
 import '../src/styles/App.css'
 import '../src/styles/index.css'
@@ -9,7 +11,9 @@ import '../src/styles/index.css'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
-      <App />
+      <FavoritesProvider>
+        <App />
+      </FavoritesProvider>
     </AuthProvider>
   </StrictMode>,
 )

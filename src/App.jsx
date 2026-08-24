@@ -22,6 +22,7 @@ import RecipeExplorer from './pages/RecipeExplorer';
 function App() {
   const { recipes, publicRecipes, addRecipe, updateRecipe, deleteRecipe } = useRecipes();
   const { isLoggedIn, user } = useAuth();
+
   const allRecipes = [...recipes, ...publicRecipes];
 
   return (
@@ -56,7 +57,7 @@ function App() {
         <Routes>
           {/* rotas livres */}
           <Route path="/" element={<Home />} />
-          <Route path="/explorer" element={<RecipeExplorer />} />
+          <Route path="/explorer" element={<RecipeExplorer publicRecipes={publicRecipes} />} />
 
           {/* rotas protegidas */}            
           <Route 
@@ -84,7 +85,7 @@ function App() {
             path="/my-recipes"
             element={
               <PrivateRoute>
-                <MyRecipes recipes={recipes} onDelete={deleteRecipe} />
+                <MyRecipes allRecipes={allRecipes} onDelete={deleteRecipe} />
               </PrivateRoute>
             }/>
           <Route 

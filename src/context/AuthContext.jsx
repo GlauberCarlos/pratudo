@@ -7,6 +7,10 @@ export function AuthProvider({ children }) {
     const savedUser = localStorage.getItem('@my-menu:user');
     return savedUser ? JSON.parse(savedUser) : null;
   });
+  const [users, setUsers] = useState(() => {
+    const foundUser = localStorage.getItem('@my-menu:registered_users');
+    return foundUser ? JSON.parse(foundUser) : 'Comunidade';
+  });
 
   // Helper para ler todos os usuários cadastrados no localStorage
   const DEFAULT_SUPER_ADMIN = {
@@ -16,6 +20,11 @@ export function AuthProvider({ children }) {
     password: 'admin', // Senha padrão para testes
     role: 'admin',
     status: 'active'
+  };
+
+  const getUserName = (userId) => {
+    const foundUser = users.find((u) => u.id === userId);
+    return foundUser ? foundUser.name : 'Comunidade';
   };
 
   const getRegisteredUsers = () => {
@@ -133,12 +142,14 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider 
       value={{ 
         user, 
+        users,
         isLoggedIn: !!user, 
         isAdmin: user?.role === 'admin',
         login, 
         register, 
         logout,
         getRegisteredUsers,
+        getUserName,
         approveAdmin,
         rejectAdmin,
         toggleUserStatus,

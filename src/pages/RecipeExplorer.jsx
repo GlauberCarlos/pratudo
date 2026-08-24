@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { useFavorites } from '../context/FavoritesContext';
 
-export default function RecipeExplorer({ recipes = [], favorites = [], onToggleFavorite }) {
+export default function RecipeExplorer({ publicRecipes = [] }) {
+  const { user, getUserName } = useAuth();
+  const { favorites, toggleFavorite } = useFavorites();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('Todas');
   const [isVegetarian, setIsVegetarian] = useState(false);
@@ -10,9 +15,13 @@ export default function RecipeExplorer({ recipes = [], favorites = [], onToggleF
   const [isGlutenFree, setIsGlutenFree] = useState(false);
   const [sortBy, setSortBy] = useState('title-asc');
 
-  const filteredRecipes = recipes.filter((recipe) => {
-    const term = searchTerm.toLowerCase().trim();
+  // const notMineRecipes = publicRecipes.filter((rec) => rec.userId !== user.id);
+  const filteredRecipes = publicRecipes.filter((recipe) => {
+    if (user?.id && recipe.userId === user.id) {
+      return false;
+    }
 
+    const term = searchTerm.toLowerCase().trim();
     const matchTitle = recipe.title?.toLowerCase().includes(term);
     const matchDescription = recipe.description?.toLowerCase().includes(term);
     const matchIngredients = recipe.ingredients?.some((ing) => ing.toLowerCase().includes(term));
@@ -63,7 +72,7 @@ export default function RecipeExplorer({ recipes = [], favorites = [], onToggleF
 
       {/* PAINEL DE BUSCA E FILTROS */}
       <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', marginBottom: '25px', border: '1px solid #e0e0e0' }}>
-        
+
         {/* Campo de Busca Principal */}
         <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Buscar Receita</label>
@@ -144,6 +153,7 @@ export default function RecipeExplorer({ recipes = [], favorites = [], onToggleF
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
           {sortedRecipes.map((recipe) => {
             const isFav = favorites.includes(recipe.id);
+            const authorName = getUserName(recipe.userId);
 
             return (
               <div
@@ -159,30 +169,28 @@ export default function RecipeExplorer({ recipes = [], favorites = [], onToggleF
                 }}
               >
                 {/* Botão de Favorito no Canto Superior Direito */}
-                {onToggleFavorite && (
-                  <button
-                    onClick={() => onToggleFavorite(recipe.id)}
-                    title={isFav ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos'}
-                    style={{
-                      position: 'absolute',
-                      top: '10px',
-                      right: '10px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                      border: 'none',
-                      borderRadius: '50%',
-                      width: '36px',
-                      height: '36px',
-                      cursor: 'pointer',
-                      fontSize: '18px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-                    }}
-                  >
-                    {isFav ? '❤️' : '🤍'}
-                  </button>
-                )}
+                <button
+                  onClick={() => toggleFavorite(recipe.id)}
+                  title={isFav ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos'}
+                  style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '36px',
+                    height: '36px',
+                    cursor: 'pointer',
+                    fontSize: '18px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                  }}
+                >
+                  {isFav ? '❤️' : '🤍'}
+                </button>
 
                 <img
                   src={recipe.img}
@@ -195,6 +203,11 @@ export default function RecipeExplorer({ recipes = [], favorites = [], onToggleF
                     <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#00695c', backgroundColor: '#e0f2f1', padding: '2px 8px', borderRadius: '10px' }}>
                       {recipe.category}
                     </span>
+
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#8d6e63', backgroundColor: '#fff8e1', padding: '2px 8px', borderRadius: '10px', border: '1px solid #ffe082' }}>
+                      👤 {authorName}
+                    </span>
+
                     <h3 style={{ margin: '8px 0', fontSize: '18px' }}>{recipe.title}</h3>
                     {recipe.description && (
                       <p style={{ color: '#666', fontSize: '14px', margin: '0 0 10px 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
