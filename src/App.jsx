@@ -1,13 +1,13 @@
 // App
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
-// import { useRecipes } from './hooks/useRecipes';
-import { useAuth } from './hooks/useAuth';
-
+// Layout & Rotas Guardiãs
+import MainLayout from './components/MainLayout';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
 import GuestRoute from './components/GuessRoute';
 
+// Páginas
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -20,107 +20,40 @@ import RecipeEdit from './pages/RecipeEdit';
 import RecipeDetails from './pages/RecipeDetails';
 import RecipeExplorer from './pages/RecipeExplorer';
 
-function App() {
-  const { isLoggedIn, user } = useAuth();
-
-
+export default function App() {
   return (
     <BrowserRouter>
-      <nav style={{ padding: '15px', backgroundColor: '#f0f0f0', marginBottom: '20px' }}>
-        <Link to="/" style={{ marginRight: '15px' }}>Página Inicial</Link>        
-        <Link to="/explorer" style={{ marginRight: '15px' }}>Explorar</Link>        
-
-        {isLoggedIn &&
-          <>
-            <Link to="/menu" style={{ marginRight: '15px' }}>Cardápio Semanal</Link>
-            <Link to="/my-recipes" style={{ marginRight: '15px' }}>Minhas Receitas</Link>        
-          </>
-        }       
-
-        {user?.role === 'admin' && (
-          <Link to="/admin" style={{ color: '#d32f2f', fontWeight: 'bold' }}>Painel Admin</Link>
-        )}
-
-        {isLoggedIn ? (
-          <Link to="/profile" style={{ marginRight: '15px' }}>Meu Perfil</Link>
-        ) : (
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
-            <Link to="/login">Entrar</Link>
-            <Link to="/register">Cadastrar</Link>
-          </div>
-        )
-        }
-      </nav>
-
-      <div>
-        <Routes>
-          {/* rotas livres */}
+      <Routes>
+        {/* Layout Principal com Header e Footer para todas as páginas */}
+        <Route element={<MainLayout />}>
+          
+          {/*  ROTAS PÚBLICAS */}
           <Route path="/" element={<Home />} />
-          <Route path="/explorer" element={<RecipeExplorer/>} />
-          <Route path="/recipe/:id" element={<RecipeDetails/>}/>
+          <Route path="/explorer" element={<RecipeExplorer />} />
+          <Route path="/recipe/:id" element={<RecipeDetails />} />
 
-          {/* rotas protegidas */}            
-          <Route 
-            path="/login"
-            element={
-              <GuestRoute>
-                <Login />
-              </GuestRoute>
-            }/>
-          <Route 
-            path="/register"
-            element={
-              <GuestRoute>
-                <Register />
-              </GuestRoute>
-            }/>
-          <Route 
-            path="/profile"
-            element={
-              <PrivateRoute>
-                <Profile />
-              </PrivateRoute>
-            }/>
-          <Route 
-            path="/my-recipes"
-            element={
-              <PrivateRoute>
-                <MyRecipes/>
-              </PrivateRoute>
-            }/>
-          <Route 
-            path="/menu"
-            element={
-              <PrivateRoute>
-                <RecipeWeek/>
-              </PrivateRoute>
-            }/>          
-          <Route 
-            path="/recipe/new"
-            element={
-              <PrivateRoute>
-                <RecipeNew/>
-              </PrivateRoute>
-            }/>
-          <Route 
-            path="/recipe/:id/edit"
-            element={
-              <PrivateRoute>
-                <RecipeEdit/>
-              </PrivateRoute>
-            }/>        
-          <Route 
-            path="/admin" 
-            element={
-              <AdminRoute>
-                <AdminDashboard />
-              </AdminRoute>
-            } 
-          />  
-        </Routes>
-      </div>
+          {/* ROTAS APENAS PARA VISITANTES (Não Logados) */}
+          <Route element={<GuestRoute />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+          </Route>
+
+          {/* ROTAS PROTEGIDAS (Apenas Logados) */}
+          <Route element={<PrivateRoute />}>
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/my-recipes" element={<MyRecipes />} />
+            <Route path="/menu" element={<RecipeWeek />} />
+            <Route path="/recipe/new" element={<RecipeNew />} />
+            <Route path="/recipe/:id/edit" element={<RecipeEdit />} />
+          </Route>
+
+          {/* ROTA ADMIN */}
+          <Route element={<AdminRoute />}>
+            <Route path="/admin" element={<AdminDashboard />} />
+          </Route>
+
+        </Route>
+      </Routes>
     </BrowserRouter>
   );
 }
-
-export default App;
