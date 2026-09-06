@@ -1,8 +1,10 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import logoSvg from '../assets/praTudo.svg';
+import '../styles/Header.css';
 
 export default function Header() {
-    const { user, logout } = useAuth();
+    const { isLoggedIn, user, logout } = useAuth();
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -11,75 +13,71 @@ export default function Header() {
     };
 
     return (
-        <header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e0e0e0', padding: '15px 20px' }}>
-            <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <header className="header">
+      <div className="header-container">
+        
+        {/* LOGO (Com efeito "vazado") */}
+        <div className="header-logo-wrapper">
+          <Link to="/">
+            <img src={logoSvg} alt="PraTudo Logo" className="header-logo" />
+          </Link>
+        </div>
 
-                {/* Logo / Nome da Aplicação */}
-                <Link to="/" style={{ textDecoration: 'none', color: '#2e7d32', fontSize: '24px', fontWeight: 'bold' }}>
-                    🥗 MyMenu
+        {/* NAVEGAÇÃO CENTRAL */}
+        <nav className="header-nav">
+          <NavLink to="/" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+            Página Inicial
+          </NavLink>
+
+          <NavLink to="/explorer" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+            Explorar
+          </NavLink>
+
+          {isLoggedIn && (
+            <>
+              <NavLink to="/menu" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+                Cardápio Semanal
+              </NavLink>
+              <NavLink to="/my-recipes" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+                Minhas Receitas
+              </NavLink>
+            </>
+          )}
+
+          {user?.role === 'admin' && (
+            <NavLink to="/admin" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+              Painel Admin
+            </NavLink>
+          )}
+        </nav>
+
+        {/* ÁREA DO USUÁRIO (DIREITA) */}
+        <div className="header-user">
+          {isLoggedIn ? (
+            <>
+              <span className="user-greeting">
+                Olá,{' '}
+                <Link to="/profile" className="user-profile-link">
+                  {user?.name || user?.email}
                 </Link>
-
-                {/* Links de Navegação Principal */}
-                <nav style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                    <Link to="/explorer" style={{ textDecoration: 'none', color: '#333', fontWeight: '500' }}>
-                        Explorar
-                    </Link>
-
-                    {user && (
-                        <>
-                            <Link to="/my-recipes" style={{ textDecoration: 'none', color: '#333', fontWeight: '500' }}>
-                                Minhas Receitas
-                            </Link>
-                            <Link to="/menu" style={{ textDecoration: 'none', color: '#333', fontWeight: '500' }}>
-                                Cardápio Semanal
-                            </Link>
-                        </>
-                    )}
-                </nav>
-
-                {/* Área do Usuário / Autenticação */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    {user ? (
-                        <>
-                            <span style={{ fontSize: '14px', color: '#555' }}>
-                                Olá, <Link to="/profile">
-                                    <strong>{user.name || user.email}</strong>
-                                </Link>
-                                
-                            </span>
-                            <button
-                                onClick={handleLogout}
-                                style={{
-                                    padding: '6px 12px',
-                                    backgroundColor: '#f44336',
-                                    color: '#fff',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold',
-                                }}
-                            >
-                                Sair
-                            </button>
-                        </>
-                    ) : (
-                        <Link
-                            to="/login"
-                            style={{
-                                padding: '8px 16px',
-                                backgroundColor: '#2e7d32',
-                                color: '#fff',
-                                textDecoration: 'none',
-                                borderRadius: '4px',
-                                fontWeight: 'bold',
-                            }}
-                        >
-                            Entrar
-                        </Link>
-                    )}
-                </div>
-
+              </span>
+              <button onClick={handleLogout} className="logout-btn">
+                Sair
+              </button>
+            </>
+          ) : (
+            <div className="auth-links">
+              <NavLink to="/login" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+                Entrar
+              </NavLink>
+              <NavLink to="/register" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+                Cadastrar
+              </NavLink>
             </div>
-        </header>
-    );
+          )}
+        </div>
+
+      </div>
+    </header>
+  );
 }

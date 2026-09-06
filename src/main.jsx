@@ -10,7 +10,6 @@ import { RatingsProvider } from './context/RatingsContext.jsx';
 
 import { CommentsProvider } from './context/CommentsContext.jsx';
 
-import '../src/styles/App.css'
 import '../src/styles/index.css'
 
 createRoot(document.getElementById('root')).render(

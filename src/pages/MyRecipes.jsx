@@ -1,4 +1,4 @@
-// MyRecipes
+// src/pages/MyRecipes.jsx
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -6,6 +6,9 @@ import { useAuth } from '../hooks/useAuth';
 import { useFavorites } from '../context/FavoritesContext';
 import { useRatings } from '../context/RatingsContext';
 import { useRecipes } from '../context/RecipesContext';
+
+import '../styles/RecipeList.css';
+import '../styles/index.css';
 
 export default function MyRecipes() {
   const { user, getUserName } = useAuth();
@@ -22,6 +25,14 @@ export default function MyRecipes() {
   const [sortBy, setSortBy] = useState('title-asc');
   const [onlyFavorites, setOnlyFavorites] = useState(false);
 
+  // Extrai dinamicamente as categorias únicas das receitas
+  const categoriesList = useMemo(() => {
+    const categoriesSet = new Set(
+      recipes.map((r) => r.category).filter(Boolean)
+    );
+    return Array.from(categoriesSet);
+  }, [recipes]);
+
   // Filtra receitas criadas pelo usuário ou favoritadas por ele
   const rawCollection = recipes.filter((recipe) => {
     const isMine = recipe.userId === user?.id;
@@ -33,7 +44,7 @@ export default function MyRecipes() {
     new Map(rawCollection.map((recipe) => [recipe.id, recipe])).values()
   );
 
-  // Anexa dynamicamente as notas calculadas do RatingsContext
+  // Anexa dinamicamente as notas calculadas do RatingsContext
   const recipesWithRatings = useMemo(() => {
     return myCollection.map((recipe) => {
       const { rating, ratingCount } = getRecipeRating(recipe.id);
@@ -46,9 +57,14 @@ export default function MyRecipes() {
     const term = searchTerm.toLowerCase().trim();
     const matchTitle = recipe.title?.toLowerCase().includes(term);
     const matchDescription = recipe.description?.toLowerCase().includes(term);
-    const matchIngredients = recipe.ingredients?.some((ing) => ing.toLowerCase().includes(term));
-    const matchRestrictions = recipe.restrictions?.some((res) => res.toLowerCase().includes(term));
-    const matchesSearch = !term || matchTitle || matchDescription || matchIngredients || matchRestrictions;
+    const matchIngredients = recipe.ingredients?.some((ing) =>
+      ing.toLowerCase().includes(term)
+    );
+    const matchRestrictions = recipe.restrictions?.some((res) =>
+      res.toLowerCase().includes(term)
+    );
+    const matchesSearch =
+      !term || matchTitle || matchDescription || matchIngredients || matchRestrictions;
 
     const matchesCategory = category === 'Todas' || recipe.category === category;
     const isFav = favorites.includes(recipe.id);
@@ -90,213 +106,191 @@ export default function MyRecipes() {
   });
 
   const handleDelete = (id) => {
-    if (confirm('Tem certeza que deseja excluir esta receita?')) {
-      onDelete(id);
+    if (window.confirm('Tem certeza que deseja excluir esta receita?')) {
+      deleteRecipe(id);
     }
   };
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2>Minhas Receitas & Favoritos</h2>
-        <Link
-          to="/recipe/new"
-          style={{ padding: '10px 16px', backgroundColor: '#4CAF50', color: '#fff', textDecoration: 'none', borderRadius: '4px', fontWeight: 'bold' }}
-        >
+    <div className="recipes-page-container main-container">
+      <div className="recipes-header-section">
+        <h2 className="recipes-page-title">Minhas Receitas e Receitas Favoritas</h2>
+        <Link to="/recipe/new" className="btn-add-recipe">
           + Nova Receita
         </Link>
       </div>
 
-      {/* Painel de Filtros */}
-      <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', marginBottom: '25px', border: '1px solid #e0e0e0' }}>
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Buscar no Seu Acervo</label>
+      {/* PAINEL DE FILTROS EM 3 LINHAS */}
+      <div className="recipes-filter-panel">
+
+        {/* LINHA 1: Buscar, Categoria e Ordenar */}
+        <div className="filter-row-1">
           <input
             type="text"
+            placeholder="Buscar por título, ingrediente ou restrição..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Procure por título, descrição, ingrediente ou restrição..."
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+            className="filter-input-search"
           />
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="filter-select"
+          >
+            <option value="Todas">Todas as Categorias</option>
+            {categoriesList.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="filter-select"
+          >
+            <option value="title-asc">Título (A-Z)</option>
+            <option value="title-desc">Título (Z-A)</option>
+            <option value="rating-desc">Maior Avaliação</option>
+            <option value="rating-asc">Menor Avaliação</option>
+            <option value="ratingCount-desc">Mais Avaliações</option>
+            <option value="ratingCount-asc">Menos Avaliações</option>
+          </select>
         </div>
 
-        <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', marginBottom: '15px' }}>
-          <div style={{ flex: 1, minWidth: '200px' }}>
-            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Categoria</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-            >
-              <option value="Todas">Todas as Categorias</option>
-              <option value="Café da Manhã">Café da Manhã</option>
-              <option value="Almoço">Almoço</option>
-              <option value="Jantar">Jantar</option>
-              <option value="Lanche">Lanche</option>
-              <option value="Sobremesa">Sobremesa</option>
-            </select>
-          </div>
-
-          <div style={{ flex: 1, minWidth: '200px' }}>
-            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Ordenar Por</label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-            >
-              <option value="title-asc">Título (A-Z)</option>
-              <option value="title-desc">Título (Z-A)</option>
-              <option value="rating-desc">Avaliação (Maior para Menor)</option>
-              <option value="rating-asc">Avaliação (Menor para Maior)</option>
-              <option value="ratingCount-desc">Qtd. Avaliações (Maior para Menor)</option>
-              <option value="ratingCount-asc">Qtd. Avaliações (Menor para Maior)</option>
-            </select>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold', color: '#e91e63' }}>
+        {/* LINHA 2: Somente Favoritos */}
+        <div className="filter-row-2">
+          <label className="checkbox-label">
             <input
               type="checkbox"
               checked={onlyFavorites}
               onChange={(e) => setOnlyFavorites(e.target.checked)}
             />
-            ❤️ Mostrar Apenas Favoritos
+            Somente Favoritos
           </label>
-
-          <div>
-            <strong style={{ display: 'block', marginBottom: '8px', fontSize: '14px' }}>Restrições Alimentares:</strong>
-            <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <input type="checkbox" checked={isVegetarian} onChange={(e) => setIsVegetarian(e.target.checked)} />
-                Vegetariano
-              </label>
-              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <input type="checkbox" checked={isVegan} onChange={(e) => setIsVegan(e.target.checked)} />
-                Vegano
-              </label>
-              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <input type="checkbox" checked={isLactoseFree} onChange={(e) => setIsLactoseFree(e.target.checked)} />
-                Sem Lactose
-              </label>
-              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <input type="checkbox" checked={isGlutenFree} onChange={(e) => setIsGlutenFree(e.target.checked)} />
-                Sem Glúten
-              </label>
-            </div>
-          </div>
         </div>
+
+        {/* LINHA 3: Restrições */}
+        <div className="filter-row-3">
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={isVegetarian}
+              onChange={(e) => setIsVegetarian(e.target.checked)}
+            />
+            🌱 Vegetariano
+          </label>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={isVegan}
+              onChange={(e) => setIsVegan(e.target.checked)}
+            />
+            🌿 Vegano
+          </label>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={isLactoseFree}
+              onChange={(e) => setIsLactoseFree(e.target.checked)}
+            />
+            🥛 Sem Lactose
+          </label>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={isGlutenFree}
+              onChange={(e) => setIsGlutenFree(e.target.checked)}
+            />
+            🌾 Sem Glúten
+          </label>
+        </div>
+
       </div>
 
-      {/* Grid de Cards */}
+      {/* GRADE DE CARDS */}
       {sortedRecipes.length === 0 ? (
-        <p style={{ color: '#666', textAlign: 'center', padding: '40px 0' }}>
+        <p style={{ color: '#5D5D5D', textAlign: 'center', padding: '40px 0' }}>
           Nenhuma receita encontrada com os filtros selecionados.
         </p>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+        <div className="recipes-grid">
           {sortedRecipes.map((recipe) => {
             const isMine = recipe.userId === user?.id;
             const isFav = favorites.includes(recipe.id);
             const authorName = getUserName ? getUserName(recipe.userId) : 'Autor';
-            const cardBackgroundColor = isMine ? '#ffffff' : '#fffde7';
+
+            const servingsText = recipe.servings > 1 ? 'porções' : 'porção';
 
             return (
               <div
                 key={recipe.id}
-                style={{
-                  border: `1px solid ${isMine ? '#e0e0e0' : '#ffe082'}`,
-                  borderRadius: '8px',
-                  overflow: 'hidden',
-                  backgroundColor: cardBackgroundColor,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  position: 'relative',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                }}
+                className={`recipe-card ${isMine ? 'own-recipe' : 'third-party-recipe'}`}
               >
-                <button
-                  onClick={() => toggleFavorite(recipe.id)}
-                  title={isFav ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos'}
-                  style={{
-                    position: 'absolute',
-                    top: '10px',
-                    right: '10px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '36px',
-                    height: '36px',
-                    cursor: 'pointer',
-                    fontSize: '18px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-                  }}
-                >
-                  {isFav ? '❤️' : '🤍'}
-                </button>
+                {/* Imagem + Overlay do Favorito */}
+                <div className="recipe-card-image-wrapper">
+                  <img
+                    src={recipe.img || 'https://via.placeholder.com/300x150'}
+                    alt={recipe.title}
+                    className="recipe-card-image"
+                  />
+                  <button
+                    onClick={() => toggleFavorite(recipe.id)}
+                    className="favorite-btn-overlay"
+                    title={isFav ? 'Remover dos Favoritos' : 'Favoritar'}
+                  >
+                    {isFav ? '❤️' : '🤍'}
+                  </button>
+                </div>
 
-                <img
-                  src={recipe.img || 'https://via.placeholder.com/280x180'}
-                  alt={recipe.title}
-                  style={{ width: '100%', height: '180px', objectFit: 'cover' }}
-                />
-
-                <div style={{ padding: '15px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                {/* Conteúdo */}
+                <div className="recipe-card-content">
                   <div>
-                    <div style={{ display: 'flex', gap: '6px', marginBottom: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#00695c', backgroundColor: '#e0f2f1', padding: '2px 8px', borderRadius: '10px' }}>
-                        {recipe.category}
+                    {/* Linha 1: Título (Esq) e Avaliação (Dir) */}
+                    <div className="recipe-card-header">
+                      <h3 className="recipe-card-title">{recipe.title}</h3>
+                      <span className="recipe-card-rating">
+                        ★ {recipe.rating > 0 ? recipe.rating.toFixed(1) : 'Novo'}{' '}
+                        {recipe.ratingCount > 0 && `(${recipe.ratingCount})`}
                       </span>
-
-                      {!isMine && (
-                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#8d6e63', backgroundColor: '#fff8e1', padding: '2px 8px', borderRadius: '10px', border: '1px solid #ffe082' }}>
-                          👤 {authorName}
-                        </span>
-                      )}
                     </div>
 
-                    <h3 style={{ margin: '8px 0', fontSize: '18px' }}>{recipe.title}</h3>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', fontSize: '13px', marginBottom: '12px' }}>
-                      <span style={{ fontWeight: 'bold', color: '#ff9800' }}>
-                        ⭐ {recipe.rating > 0 ? recipe.rating : 'Novo'} ({recipe.ratingCount})
+                    {/* Linha 2: Tempo/Porções (Esq) e Nome do Autor (Dir) */}
+                    <div className="recipe-card-meta">
+                      <div className="meta-info">
+                        <span>⏱️ {recipe.prepareTime || 0} min</span>
+                        <span>🍽️ {recipe.servings || 1} {servingsText}</span>
+                      </div>
+                      <span className="meta-author" title={authorName}>
+                        👤 {authorName}
                       </span>
-                      <span>⏱️ {recipe.prepareTime} min | 🍽️ {recipe.servings} p.</span>
                     </div>
                   </div>
 
-                  {isMine ? (
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-                      <Link
-                        to={`/recipe/${recipe.id}`}
-                        style={{ flex: 1, textAlign: 'center', padding: '6px', backgroundColor: '#2196F3', color: '#fff', textDecoration: 'none', borderRadius: '4px', fontSize: '14px' }}
-                      >
-                        Ver
+                  {/* Linha 3: Botões de Ação */}
+                  <div className="recipe-card-actions">
+                    {isMine ? (
+                      <>
+                        <Link to={`/recipe/${recipe.id}`} className="btn-view">
+                          Ver
+                        </Link>
+                        <Link to={`/recipe/${recipe.id}/edit`} className="btn-edit">
+                          Editar
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(recipe.id)}
+                          className="btn-delete"
+                        >
+                          Excluir
+                        </button>
+                      </>
+                    ) : (
+                      <Link to={`/recipe/${recipe.id}`} className="btn-view">
+                        Ver Detalhes
                       </Link>
-                      <Link
-                        to={`/recipe/${recipe.id}/edit`}
-                        style={{ flex: 1, textAlign: 'center', padding: '6px', backgroundColor: '#ff9800', color: '#fff', textDecoration: 'none', borderRadius: '4px', fontSize: '14px' }}
-                      >
-                        Editar
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(recipe.id)}
-                        style={{ padding: '6px 12px', backgroundColor: '#f44336', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
-                      >
-                        Excluir
-                      </button>
-                    </div>
-                  ) : (
-                    <Link
-                      to={`/recipe/${recipe.id}`}
-                      style={{ display: 'block', textAlign: 'center', padding: '8px', backgroundColor: '#4CAF50', color: '#fff', textDecoration: 'none', borderRadius: '4px', fontWeight: 'bold', fontSize: '14px' }}
-                    >
-                      Ver Detalhes
-                    </Link>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             );

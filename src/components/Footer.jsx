@@ -1,22 +1,32 @@
 import { Link } from 'react-router-dom';
+import logoSvg from '../assets/praTudo.svg';
+import '../styles/Footer.css';
 
 export default function Footer() {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer style={{ backgroundColor: '#222', color: '#ccc', padding: '30px 20px', marginTop: 'auto' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+    <footer className="footer">
+      <div className="footer-container">
         
-        <div>
-          <h4 style={{ color: '#fff', margin: '0 0 5px 0' }}>🥗 MyMenu</h4>
-          <p style={{ margin: 0, fontSize: '13px' }}>Seu planejador de receitas e cardápio semanal.</p>
+        {/* LOGO + NOME DA MARCA */}
+        <div className="footer-brand">
+          <Link to="/" className="footer-brand-link">
+            <img src={logoSvg} alt="PraTudo" className="footer-logo" />
+            <span className="footer-brand-title">PraTudo</span>
+          </Link>
+          <span className="footer-tagline">Seu planejador de receitas e cardápio semanal.</span>
         </div>
 
-        <div style={{ display: 'flex', gap: '15px', fontSize: '14px' }}>
-          <Link to="/explorer" style={{ color: '#ccc', textDecoration: 'none' }}>Explorar</Link>
-          <Link to="/about" style={{ color: '#ccc', textDecoration: 'none' }}>Sobre</Link>
-        </div>
+        {/* LINKS RÁPIDOS */}
+        <nav className="footer-nav">
+          <Link to="/" className="footer-link">Página Inicial</Link>
+          <Link to="/menu" className="footer-link">Cardápio Semanal</Link>
+        </nav>
 
-        <div style={{ fontSize: '12px', color: '#888' }}>
-          © {new Date().getFullYear()} MyMenu. Todos os direitos reservados.
+        {/* DIREITOS AUTORAIS */}
+        <div className="footer-copyright">
+          © {currentYear} PraTudo. Todos os direitos reservados.
         </div>
 
       </div>

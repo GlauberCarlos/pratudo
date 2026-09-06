@@ -1,0 +1,98 @@
+/* Footer Base */
+.footer {
+  background-color: #5D5D5D; /* Cinza-1 */
+  color: #FAFAFA; /* Branco-1 */
+  padding: 16px 0; /* Mais fino */
+  margin-top: auto; /* Garante que o footer fique no rodapé da tela */
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+/* Marca / Logo */
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.footer-brand-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.footer-logo {
+  height: 28px; /* Versão pequena do logo */
+  width: auto;
+  object-fit: contain;
+}
+
+.footer-brand-title {
+  color: #FAFAFA; /* Branco-1 */
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.footer-tagline {
+  color: #E5E5E5; /* Cinza-2 */
+  font-size: 13px;
+  border-left: 1px solid #E5E5E5;
+  padding-left: 12px;
+  margin-left: 4px;
+}
+
+/* Links de Navegação */
+.footer-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.footer-link {
+  color: #FAFAFA; /* Branco-1 */
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+  color: #FFA726; /* Laranja-1 no hover */
+}
+
+/* Copyright */
+.footer-copyright {
+  color: #E5E5E5; /* Cinza-2 */
+  font-size: 12px;
+}
+
+/* Responsividade Básica (Telas menores/Celular) */
+@media (max-width: 768px) {
+  .footer-container {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .footer-brand {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .footer-tagline {
+    border-left: none;
+    padding-left: 0;
+    margin-left: 0;
+  }
+}
