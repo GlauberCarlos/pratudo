@@ -1,11 +1,17 @@
-import { useState } from 'react';
+// MyRecipes
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+
 import { useAuth } from '../hooks/useAuth';
 import { useFavorites } from '../context/FavoritesContext';
+import { useRatings } from '../context/RatingsContext';
+import { useRecipes } from '../context/RecipesContext';
 
-export default function MyRecipes({ allRecipes = [], onDelete}) {
+export default function MyRecipes() {
   const { user, getUserName } = useAuth();
   const { favorites, toggleFavorite } = useFavorites();
+  const { getRecipeRating } = useRatings();
+  const { recipes, deleteRecipe } = useRecipes();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('Todas');
@@ -16,7 +22,8 @@ export default function MyRecipes({ allRecipes = [], onDelete}) {
   const [sortBy, setSortBy] = useState('title-asc');
   const [onlyFavorites, setOnlyFavorites] = useState(false);
 
-  const rawCollection = allRecipes.filter((recipe) => {
+  // Filtra receitas criadas pelo usuário ou favoritadas por ele
+  const rawCollection = recipes.filter((recipe) => {
     const isMine = recipe.userId === user?.id;
     const isFav = favorites.includes(recipe.id);
     return isMine || isFav;
@@ -26,8 +33,16 @@ export default function MyRecipes({ allRecipes = [], onDelete}) {
     new Map(rawCollection.map((recipe) => [recipe.id, recipe])).values()
   );
 
-  //Busca e Filtros
-  const filteredRecipes = myCollection.filter((recipe) => {
+  // Anexa dynamicamente as notas calculadas do RatingsContext
+  const recipesWithRatings = useMemo(() => {
+    return myCollection.map((recipe) => {
+      const { rating, ratingCount } = getRecipeRating(recipe.id);
+      return { ...recipe, rating, ratingCount };
+    });
+  }, [myCollection, getRecipeRating]);
+
+  // Aplicar filtros de busca
+  const filteredRecipes = recipesWithRatings.filter((recipe) => {
     const term = searchTerm.toLowerCase().trim();
     const matchTitle = recipe.title?.toLowerCase().includes(term);
     const matchDescription = recipe.description?.toLowerCase().includes(term);
@@ -35,7 +50,6 @@ export default function MyRecipes({ allRecipes = [], onDelete}) {
     const matchRestrictions = recipe.restrictions?.some((res) => res.toLowerCase().includes(term));
     const matchesSearch = !term || matchTitle || matchDescription || matchIngredients || matchRestrictions;
 
-    // Filtros 
     const matchesCategory = category === 'Todas' || recipe.category === category;
     const isFav = favorites.includes(recipe.id);
     const matchesOnlyFavorites = !onlyFavorites || isFav;
@@ -86,17 +100,15 @@ export default function MyRecipes({ allRecipes = [], onDelete}) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h2>Minhas Receitas & Favoritos</h2>
         <Link
-          to="/menu/new"
+          to="/recipe/new"
           style={{ padding: '10px 16px', backgroundColor: '#4CAF50', color: '#fff', textDecoration: 'none', borderRadius: '4px', fontWeight: 'bold' }}
         >
           + Nova Receita
         </Link>
       </div>
 
-      {/* PAINEL DE BUSCA E FILTROS */}
+      {/* Painel de Filtros */}
       <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', marginBottom: '25px', border: '1px solid #e0e0e0' }}>
-
-        {/* Busca por Texto */}
         <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Buscar no Seu Acervo</label>
           <input
@@ -108,7 +120,6 @@ export default function MyRecipes({ allRecipes = [], onDelete}) {
           />
         </div>
 
-        {/* Categoria e Ordenação */}
         <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', marginBottom: '15px' }}>
           <div style={{ flex: 1, minWidth: '200px' }}>
             <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Categoria</label>
@@ -143,9 +154,7 @@ export default function MyRecipes({ allRecipes = [], onDelete}) {
           </div>
         </div>
 
-        {/* Checkboxes de Filtros */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {/* Checkbox de Favoritos */}
           <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold', color: '#e91e63' }}>
             <input
               type="checkbox"
@@ -155,7 +164,6 @@ export default function MyRecipes({ allRecipes = [], onDelete}) {
             ❤️ Mostrar Apenas Favoritos
           </label>
 
-          {/* Restrições Alimentares */}
           <div>
             <strong style={{ display: 'block', marginBottom: '8px', fontSize: '14px' }}>Restrições Alimentares:</strong>
             <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
@@ -180,37 +188,33 @@ export default function MyRecipes({ allRecipes = [], onDelete}) {
         </div>
       </div>
 
-      {/* RESULTADOS */}
+      {/* Grid de Cards */}
       {sortedRecipes.length === 0 ? (
         <p style={{ color: '#666', textAlign: 'center', padding: '40px 0' }}>
-          Nenhuma receita encontrada no seu acervo com os filtros selecionados.
+          Nenhuma receita encontrada com os filtros selecionados.
         </p>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
           {sortedRecipes.map((recipe) => {
             const isMine = recipe.userId === user?.id;
             const isFav = favorites.includes(recipe.id);
-
-            const authorName = getUserName(recipe.userId);
-
+            const authorName = getUserName ? getUserName(recipe.userId) : 'Autor';
             const cardBackgroundColor = isMine ? '#ffffff' : '#fffde7';
-            const cardBorderColor = isMine ? '#e0e0e0' : '#ffe082';
 
             return (
               <div
                 key={recipe.id}
                 style={{
-                  border: '1px solid #e0e0e0',
+                  border: `1px solid ${isMine ? '#e0e0e0' : '#ffe082'}`,
                   borderRadius: '8px',
                   overflow: 'hidden',
-                  backgroundColor: '#fff',
+                  backgroundColor: cardBackgroundColor,
                   display: 'flex',
                   flexDirection: 'column',
                   position: 'relative',
                   boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
                 }}
               >
-                {/* Botão Favoritar */}
                 <button
                   onClick={() => toggleFavorite(recipe.id)}
                   title={isFav ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos'}
@@ -235,7 +239,7 @@ export default function MyRecipes({ allRecipes = [], onDelete}) {
                 </button>
 
                 <img
-                  src={recipe.img}
+                  src={recipe.img || 'https://via.placeholder.com/280x180'}
                   alt={recipe.title}
                   style={{ width: '100%', height: '180px', objectFit: 'cover' }}
                 />
@@ -247,7 +251,6 @@ export default function MyRecipes({ allRecipes = [], onDelete}) {
                         {recipe.category}
                       </span>
 
-                      {/* Nome do criador exibido apenas se for receita de terceiros */}
                       {!isMine && (
                         <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#8d6e63', backgroundColor: '#fff8e1', padding: '2px 8px', borderRadius: '10px', border: '1px solid #ffe082' }}>
                           👤 {authorName}
@@ -256,22 +259,25 @@ export default function MyRecipes({ allRecipes = [], onDelete}) {
                     </div>
 
                     <h3 style={{ margin: '8px 0', fontSize: '18px' }}>{recipe.title}</h3>
-                    <div style={{ color: '#666', fontSize: '14px', marginBottom: '12px' }}>
-                      ⏱️ {recipe.prepareTime} min | 🍽️ {recipe.servings} porções
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', fontSize: '13px', marginBottom: '12px' }}>
+                      <span style={{ fontWeight: 'bold', color: '#ff9800' }}>
+                        ⭐ {recipe.rating > 0 ? recipe.rating : 'Novo'} ({recipe.ratingCount})
+                      </span>
+                      <span>⏱️ {recipe.prepareTime} min | 🍽️ {recipe.servings} p.</span>
                     </div>
                   </div>
 
-                  {/* Botões de Ação de acordo com a autoria */}
                   {isMine ? (
                     <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                       <Link
-                        to={`/menu/${recipe.id}`}
+                        to={`/recipe/${recipe.id}`}
                         style={{ flex: 1, textAlign: 'center', padding: '6px', backgroundColor: '#2196F3', color: '#fff', textDecoration: 'none', borderRadius: '4px', fontSize: '14px' }}
                       >
                         Ver
                       </Link>
                       <Link
-                        to={`/menu/${recipe.id}/edit`}
+                        to={`/recipe/${recipe.id}/edit`}
                         style={{ flex: 1, textAlign: 'center', padding: '6px', backgroundColor: '#ff9800', color: '#fff', textDecoration: 'none', borderRadius: '4px', fontSize: '14px' }}
                       >
                         Editar
@@ -285,7 +291,7 @@ export default function MyRecipes({ allRecipes = [], onDelete}) {
                     </div>
                   ) : (
                     <Link
-                      to={`/menu/${recipe.id}`}
+                      to={`/recipe/${recipe.id}`}
                       style={{ display: 'block', textAlign: 'center', padding: '8px', backgroundColor: '#4CAF50', color: '#fff', textDecoration: 'none', borderRadius: '4px', fontWeight: 'bold', fontSize: '14px' }}
                     >
                       Ver Detalhes

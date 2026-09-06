@@ -1,11 +1,17 @@
-import { useState } from 'react';
+// RecipeExplorer
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+
 import { useAuth } from '../hooks/useAuth';
 import { useFavorites } from '../context/FavoritesContext';
+import { useRatings } from '../context/RatingsContext';
+import { useRecipes } from '../context/RecipesContext';
 
-export default function RecipeExplorer({ publicRecipes = [] }) {
+export default function RecipeExplorer() {
   const { user, getUserName } = useAuth();
   const { favorites, toggleFavorite } = useFavorites();
+  const { getRecipeRating } = useRatings();
+  const { recipes } = useRecipes();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('Todas');
@@ -15,8 +21,18 @@ export default function RecipeExplorer({ publicRecipes = [] }) {
   const [isGlutenFree, setIsGlutenFree] = useState(false);
   const [sortBy, setSortBy] = useState('title-asc');
 
-  // const notMineRecipes = publicRecipes.filter((rec) => rec.userId !== user.id);
-  const filteredRecipes = publicRecipes.filter((recipe) => {
+  const publicRecipes = recipes.filter(
+    (recipe) => recipe.isPublic && String(recipe.userId) !== String(user?.id)
+  );
+
+  const recipesWithRatings = useMemo(() => {
+    return publicRecipes.map((recipe) => {
+      const { rating, ratingCount } = getRecipeRating(recipe.id);
+      return { ...recipe, rating, ratingCount };
+    });
+  }, [publicRecipes, getRecipeRating]);
+
+  const filteredRecipes = recipesWithRatings.filter((recipe) => {
     if (user?.id && recipe.userId === user.id) {
       return false;
     }
@@ -28,9 +44,7 @@ export default function RecipeExplorer({ publicRecipes = [] }) {
     const matchRestrictions = recipe.restrictions?.some((res) => res.toLowerCase().includes(term));
 
     const matchesSearch = !term || matchTitle || matchDescription || matchIngredients || matchRestrictions;
-
     const matchesCategory = category === 'Todas' || recipe.category === category;
-
     const matchesVegetarian = !isVegetarian || recipe.isVegetarian;
     const matchesVegan = !isVegan || recipe.isVegan;
     const matchesLactoseFree = !isLactoseFree || recipe.isLactoseFree;
@@ -70,10 +84,7 @@ export default function RecipeExplorer({ publicRecipes = [] }) {
       <h2>Explorar Receitas</h2>
       <p style={{ color: '#666', marginBottom: '20px' }}>Descubra e filtre receitas compartilhadas pela comunidade.</p>
 
-      {/* PAINEL DE BUSCA E FILTROS */}
       <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', marginBottom: '25px', border: '1px solid #e0e0e0' }}>
-
-        {/* Campo de Busca Principal */}
         <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Buscar Receita</label>
           <input
@@ -85,7 +96,6 @@ export default function RecipeExplorer({ publicRecipes = [] }) {
           />
         </div>
 
-        {/* Categoria e Ordenação */}
         <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', marginBottom: '15px' }}>
           <div style={{ flex: 1, minWidth: '200px' }}>
             <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Categoria</label>
@@ -120,7 +130,6 @@ export default function RecipeExplorer({ publicRecipes = [] }) {
           </div>
         </div>
 
-        {/* Checkboxes de Filtros Alimentares */}
         <div>
           <strong style={{ display: 'block', marginBottom: '8px', fontSize: '14px' }}>Restrições Alimentares:</strong>
           <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
@@ -144,7 +153,6 @@ export default function RecipeExplorer({ publicRecipes = [] }) {
         </div>
       </div>
 
-      {/* RESULTADOS / LISTAGEM */}
       {sortedRecipes.length === 0 ? (
         <p style={{ color: '#666', textAlign: 'center', padding: '40px 0' }}>
           Nenhuma receita encontrada com os filtros selecionados.
@@ -153,7 +161,7 @@ export default function RecipeExplorer({ publicRecipes = [] }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
           {sortedRecipes.map((recipe) => {
             const isFav = favorites.includes(recipe.id);
-            const authorName = getUserName(recipe.userId);
+            const authorName = getUserName ? getUserName(recipe.userId) : 'Usuário';
 
             return (
               <div
@@ -168,32 +176,33 @@ export default function RecipeExplorer({ publicRecipes = [] }) {
                   position: 'relative'
                 }}
               >
-                {/* Botão de Favorito no Canto Superior Direito */}
-                <button
-                  onClick={() => toggleFavorite(recipe.id)}
-                  title={isFav ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos'}
-                  style={{
-                    position: 'absolute',
-                    top: '10px',
-                    right: '10px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '36px',
-                    height: '36px',
-                    cursor: 'pointer',
-                    fontSize: '18px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-                  }}
-                >
-                  {isFav ? '❤️' : '🤍'}
-                </button>
+                {user && (
+                  <button
+                    onClick={() => toggleFavorite(recipe.id)}
+                    title={isFav ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos'}
+                    style={{
+                      position: 'absolute',
+                      top: '10px',
+                      right: '10px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '36px',
+                      height: '36px',
+                      cursor: 'pointer',
+                      fontSize: '18px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                    }}
+                  >
+                    {isFav ? '❤️' : '🤍'}
+                  </button>
+                )}
 
                 <img
-                  src={recipe.img}
+                  src={recipe.img || 'https://via.placeholder.com/280x180'}
                   alt={recipe.title}
                   style={{ width: '100%', height: '180px', objectFit: 'cover' }}
                 />
@@ -204,7 +213,7 @@ export default function RecipeExplorer({ publicRecipes = [] }) {
                       {recipe.category}
                     </span>
 
-                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#8d6e63', backgroundColor: '#fff8e1', padding: '2px 8px', borderRadius: '10px', border: '1px solid #ffe082' }}>
+                    <span style={{ marginLeft: '8px', fontSize: '12px', fontWeight: 'bold', color: '#8d6e63', backgroundColor: '#fff8e1', padding: '2px 8px', borderRadius: '10px', border: '1px solid #ffe082' }}>
                       👤 {authorName}
                     </span>
 
@@ -217,14 +226,13 @@ export default function RecipeExplorer({ publicRecipes = [] }) {
                   </div>
 
                   <div>
-                    {/* Nota e Quantidade de Avaliações */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#555', marginBottom: '8px' }}>
-                      <span>⭐ {recipe.rating ? recipe.rating.toFixed(1) : 'N/A'} ({recipe.ratingCount || 0})</span>
+                      <span>⭐ {recipe.rating > 0 ? recipe.rating.toFixed(1) : 'Novo'} ({recipe.ratingCount})</span>
                       <span>⏱️ {recipe.prepareTime} min</span>
                     </div>
 
                     <Link
-                      to={`/menu/${recipe.id}`}
+                      to={`/recipe/${recipe.id}`}
                       style={{
                         display: 'block',
                         textAlign: 'center',

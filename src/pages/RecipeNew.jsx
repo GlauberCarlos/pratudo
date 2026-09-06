@@ -1,8 +1,13 @@
+// RecipeNew.jsx
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { useRecipes } from '../context/RecipesContext';
 
-export default function RecipeNew({ onAdd }) {
+export default function RecipeNew() {
   const navigate = useNavigate();
+  const { addRecipe } = useRecipes();
+  const { user } = useAuth();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -42,6 +47,7 @@ export default function RecipeNew({ onAdd }) {
       .filter(Boolean);
 
     const newRecipe = {
+      userId: user.id,
       title,
       description,
       category,
@@ -56,11 +62,9 @@ export default function RecipeNew({ onAdd }) {
       isVegan,
       isLactoseFree,
       isGlutenFree,
-      rating: 0,
-      ratingCount: 0
     };
 
-    onAdd(newRecipe);
+    addRecipe(newRecipe);
     navigate('/my-recipes');
   };
 
@@ -199,7 +203,7 @@ export default function RecipeNew({ onAdd }) {
         {/* Filtros de Dieta (Checkboxes) */}
         <div style={{ border: '1px solid #e0e0e0', padding: '15px', borderRadius: '6px', backgroundColor: '#fafafa' }}>
           <strong style={{ display: 'block', marginBottom: '10px' }}>Filtros de Dieta:</strong>
-          
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
               <input

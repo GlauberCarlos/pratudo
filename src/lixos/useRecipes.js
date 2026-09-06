@@ -1,6 +1,6 @@
+// useRecipes.jsx
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
-// import initialRecipes from '../data/recipes.json';
 
 export function useRecipes() {
   const { user } = useAuth();
@@ -13,7 +13,6 @@ export function useRecipes() {
     else {
       return []
     }
-    // return initialRecipes.map((r) => ({ ...r, userId: r.userId || 1 }));
   });
 
   useEffect(() => {

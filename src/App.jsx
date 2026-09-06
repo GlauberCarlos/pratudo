@@ -1,6 +1,7 @@
+// App
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 
-import { useRecipes } from './hooks/useRecipes';
+// import { useRecipes } from './hooks/useRecipes';
 import { useAuth } from './hooks/useAuth';
 
 import PrivateRoute from './components/PrivateRoute';
@@ -20,10 +21,8 @@ import RecipeDetails from './pages/RecipeDetails';
 import RecipeExplorer from './pages/RecipeExplorer';
 
 function App() {
-  const { recipes, publicRecipes, addRecipe, updateRecipe, deleteRecipe } = useRecipes();
   const { isLoggedIn, user } = useAuth();
 
-  const allRecipes = [...recipes, ...publicRecipes];
 
   return (
     <BrowserRouter>
@@ -57,7 +56,8 @@ function App() {
         <Routes>
           {/* rotas livres */}
           <Route path="/" element={<Home />} />
-          <Route path="/explorer" element={<RecipeExplorer publicRecipes={publicRecipes} />} />
+          <Route path="/explorer" element={<RecipeExplorer/>} />
+          <Route path="/recipe/:id" element={<RecipeDetails/>}/>
 
           {/* rotas protegidas */}            
           <Route 
@@ -85,35 +85,28 @@ function App() {
             path="/my-recipes"
             element={
               <PrivateRoute>
-                <MyRecipes allRecipes={allRecipes} onDelete={deleteRecipe} />
+                <MyRecipes/>
               </PrivateRoute>
             }/>
           <Route 
             path="/menu"
             element={
               <PrivateRoute>
-                <RecipeWeek recipes={recipes} />
+                <RecipeWeek/>
+              </PrivateRoute>
+            }/>          
+          <Route 
+            path="/recipe/new"
+            element={
+              <PrivateRoute>
+                <RecipeNew/>
               </PrivateRoute>
             }/>
           <Route 
-            path="/menu/:id"
+            path="/recipe/:id/edit"
             element={
               <PrivateRoute>
-                <RecipeDetails recipes={allRecipes} />
-              </PrivateRoute>
-            }/>
-          <Route 
-            path="/menu/new"
-            element={
-              <PrivateRoute>
-                <RecipeNew onAdd={addRecipe} />
-              </PrivateRoute>
-            }/>
-          <Route 
-            path="/menu/:id/edit"
-            element={
-              <PrivateRoute>
-                <RecipeEdit recipes={recipes} onUpdate={updateRecipe} />
+                <RecipeEdit/>
               </PrivateRoute>
             }/>        
           <Route 

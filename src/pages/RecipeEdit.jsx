@@ -1,9 +1,12 @@
+// RecipeEdit.jsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useRecipes } from '../context/RecipesContext';
 
-export default function RecipeEdit({ recipes, onUpdate }) {
+export default function RecipeEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { recipes, updateRecipe } = useRecipes();
 
   const recipeToEdit = recipes.find((item) => item.id === Number(id));
 
@@ -47,7 +50,7 @@ export default function RecipeEdit({ recipes, onUpdate }) {
     return (
       <div>
         <h2>Receita não encontrada!</h2>
-        <Link to="/menu">← Voltar para o Cardápio</Link>
+        <Link to="/explorer">← Voltar para o Cardápio</Link>
       </div>
     );
   }
@@ -92,7 +95,7 @@ export default function RecipeEdit({ recipes, onUpdate }) {
       isGlutenFree
     };
 
-    onUpdate(updatedRecipe);
+    updateRecipe(updatedRecipe);
     navigate('/my-recipes');
   };
 
