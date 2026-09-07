@@ -5,14 +5,17 @@ import { useAuth } from '../hooks/useAuth';
 import { useRecipes } from '../context/RecipesContext';
 import { useFavorites } from '../context/FavoritesContext';
 
+import '../styles/RecipeWeek.css';
+import '../styles/index.css';
+
 const DAYS_OF_WEEK = [
-  { key: 'monday', label: 'Segunda-feira' },
-  { key: 'tuesday', label: 'Terça-feira' },
-  { key: 'wednesday', label: 'Quarta-feira' },
-  { key: 'thursday', label: 'Quinta-feira' },
-  { key: 'friday', label: 'Sexta-feira' },
-  { key: 'saturday', label: 'Sábado' },
-  { key: 'sunday', label: 'Domingo' },
+  { key: 'monday', label: 'Segunda-feira', initial: 'S' },
+  { key: 'tuesday', label: 'Terça-feira', initial: 'T' },
+  { key: 'wednesday', label: 'Quarta-feira', initial: 'Q' },
+  { key: 'thursday', label: 'Quinta-feira', initial: 'Q' },
+  { key: 'friday', label: 'Sexta-feira', initial: 'S' },
+  { key: 'saturday', label: 'Sábado', initial: 'S' },
+  { key: 'sunday', label: 'Domingo', initial: 'D' },
 ];
 
 export default function RecipeWeek() {
@@ -182,209 +185,173 @@ export default function RecipeWeek() {
   };
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
-      <h2 style={{ marginBottom: '20px' }}>📅 Planejador de Cardápio Semanal</h2>
+    <div className="recipe-week-container main-container">
+      <h2 className="recipe-week-title">Planeador Semanal</h2>
 
-      <div style={{ display: 'flex', gap: '25px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-        
-        {/* PAINEL LATERAL ESQUERDO (CONFIGURAÇÕES) */}
-        <aside
-          style={{
-            flex: '1 1 280px',
-            backgroundColor: '#f9f9f9',
-            padding: '20px',
-            borderRadius: '8px',
-            border: '1px solid #e0e0e0',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-          }}
-        >
-          <h3 style={{ marginTop: 0, marginBottom: '15px', borderBottom: '1px solid #ddd', paddingBottom: '8px' }}>
-            ⚙️ Configurações
-          </h3>
+      <div className="recipe-week-layout">
+        {/* PAINEL LATERAL DE CONFIGURAÇÕES */}
+        <aside className="recipe-week-sidebar">
 
-          {/* Seleção de Dias */}
-          <div style={{ marginBottom: '20px' }}>
-            <strong style={{ display: 'block', marginBottom: '8px', fontSize: '14px' }}>
-              Dias para preenchimento:
-            </strong>
-            {DAYS_OF_WEEK.map((day) => (
-              <label
-                key={day.key}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', cursor: 'pointer', fontSize: '14px' }}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedDays[day.key]}
-                  onChange={() => toggleDaySelection(day.key)}
-                />
-                {day.label}
-              </label>
-            ))}
+          <div className="recipe-week-days-box">
+            <div className="recipe-week-section-label">
+              Escolha os dias da semana
+            </div>
+            <div className="recipe-week-days-horizontal">
+              {DAYS_OF_WEEK.map((day) => (
+                <label key={day.key} className="recipe-week-day-item" title={day.label}>
+                  <span className="recipe-week-day-letter">{day.initial}</span>
+                  <input
+                    type="checkbox"
+                    className="checkbox-input"
+                    checked={selectedDays[day.key]}
+                    onChange={() => toggleDaySelection(day.key)}
+                  />
+                </label>
+              ))}
+            </div>
           </div>
 
-          <hr style={{ border: 'none', borderTop: '1px solid #ddd', margin: '15px 0' }} />
+          <hr className="recipe-week-divider" />
 
-          {/* Filtros de Dieta */}
-          <div style={{ marginBottom: '20px' }}>
-            <strong style={{ display: 'block', marginBottom: '8px', fontSize: '14px' }}>
-              Filtros de Dieta:
-            </strong>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', cursor: 'pointer', fontSize: '14px' }}>
-              <input type="checkbox" checked={filterVeg} onChange={(e) => setFilterVeg(e.target.checked)} />
+          {/* Filtros de Dieta na Vertical */}
+          <div className="recipe-week-filters-group">
+            <strong className="recipe-week-section-label">Filtros</strong>
+
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                className="checkbox-input"
+                checked={filterVeg}
+                onChange={(e) => setFilterVeg(e.target.checked)}
+              />
               🌱 Vegetariano
             </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', cursor: 'pointer', fontSize: '14px' }}>
-              <input type="checkbox" checked={filterVegan} onChange={(e) => setFilterVegan(e.target.checked)} />
+
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                className="checkbox-input"
+                checked={filterVegan}
+                onChange={(e) => setFilterVegan(e.target.checked)}
+              />
               🌿 Vegano
             </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', cursor: 'pointer', fontSize: '14px' }}>
-              <input type="checkbox" checked={filterLactose} onChange={(e) => setFilterLactose(e.target.checked)} />
+
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                className="checkbox-input"
+                checked={filterLactose}
+                onChange={(e) => setFilterLactose(e.target.checked)}
+              />
               🥛 Sem Lactose
             </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', cursor: 'pointer', fontSize: '14px' }}>
-              <input type="checkbox" checked={filterGluten} onChange={(e) => setFilterGluten(e.target.checked)} />
+
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                className="checkbox-input"
+                checked={filterGluten}
+                onChange={(e) => setFilterGluten(e.target.checked)}
+              />
               🌾 Sem Glúten
             </label>
           </div>
 
           {/* Restrições Adicionais */}
-          <div style={{ marginBottom: '25px' }}>
-            <strong style={{ display: 'block', marginBottom: '6px', fontSize: '14px' }}>
-              Restrições Adicionais:
-            </strong>
+          <div className="recipe-week-restrictions-group">
+            <div className="recipe-week-section-label">Restrições Adicionais:</div>
             <input
               type="text"
               placeholder="Ex: sem açúcar, low carb"
               value={restrictionsInput}
               onChange={(e) => setRestrictionsInput(e.target.value)}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', fontSize: '13px', boxSizing: 'border-box' }}
+              className="recipe-week-input-text"
             />
-            <small style={{ color: '#666', fontSize: '11px', display: 'block', marginTop: '4px' }}>
-              Separadas por vírgula
-            </small>
+            <div className="recipe-week-small-help">Separadas por vírgula</div>
           </div>
 
-          {/* Botões de Ação do Painel */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <button
-              onClick={handleGenerateMenu}
-              style={{
-                width: '100%',
-                padding: '12px',
-                backgroundColor: '#4CAF50',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '6px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '15px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              }}
-            >
-              🎲 Gerar Cardápio
+          {/* Botões do Painel Lateral */}
+          <div className="recipe-week-actions">
+            <button onClick={handleGenerateMenu} className="btn-generate-menu">
+              Gerar Cardápio
             </button>
-            <button
-              onClick={handleClearMenu}
-              style={{
-                width: '100%',
-                padding: '10px',
-                backgroundColor: '#f44336',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '6px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '14px',
-              }}
-            >
-              🧹 Limpar Cardápio
+            <button onClick={handleClearMenu} className="btn-clear-menu">
+              Limpar Cardápio
             </button>
           </div>
         </aside>
 
-        {/* ÁREA PRINCIPAL: CARDS DOS DIAS DA SEMANA */}
-        <main style={{ flex: '3 1 600px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '20px' }}>
+        {/* GRADE DOS CARDS */}
+        <main className="recipe-week-grid">
           {DAYS_OF_WEEK.map((day) => {
             const recipeId = weeklyPlan[day.key];
             const recipe = recipes.find((r) => r.id === recipeId);
 
             return (
-              <div
-                key={day.key}
-                style={{
-                  border: '1px solid #e0e0e0',
-                  borderRadius: '8px',
-                  backgroundColor: '#fff',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  overflow: 'hidden',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-                  minHeight: '280px',
-                }}
-              >
-                {/* Cabeçalho do Card */}
-                <div style={{ backgroundColor: '#2196F3', color: '#fff', padding: '10px 15px', fontWeight: 'bold' }}>
+              <div key={day.key} className="recipe-week-card">
+                <div className="recipe-week-card-header">
                   {day.label}
                 </div>
 
-                {/* Conteúdo do Card */}
-                <div style={{ padding: '15px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div className="recipe-week-card-content">
                   {recipe ? (
                     <>
                       <div>
-                        <div style={{ height: '130px', borderRadius: '6px', overflow: 'hidden', marginBottom: '10px', backgroundColor: '#eee' }}>
+                        <div className="recipe-week-img-wrapper">
                           <img
                             src={recipe.img || 'https://via.placeholder.com/300x130?text=Sem+Imagem'}
                             alt={recipe.title}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            className="recipe-week-card-img"
                           />
                         </div>
-                        <h4 style={{ margin: '0 0 5px 0', fontSize: '16px' }}>{recipe.title}</h4>
-                        <span style={{ fontSize: '12px', color: '#666' }}>⏱️ {recipe.prepareTime} min</span>
+                        <h4 className="recipe-week-card-recipe-title">{recipe.title}</h4>
+                        <p className="recipe-week-card-recipe-description">{recipe.description}</p>
+                        <span className="recipe-week-card-time">Tempo de preparo: {recipe.prepareTime} min</span>
                       </div>
 
-                      {/* Botões do Card Preenchido */}
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: '15px' }}>
+                      <div className="recipe-week-card-actions">
                         <button
                           onClick={() => setModalDayKey(day.key)}
-                          style={{ padding: '6px', backgroundColor: '#2196F3', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                          className="card-btn card-btn-choose"
                         >
                           Escolher
                         </button>
                         <button
                           onClick={() => handleRandomizeDay(day.key)}
-                          style={{ padding: '6px', backgroundColor: '#ff9800', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                          className="card-btn card-btn-randomize"
                         >
                           Sortear
                         </button>
                         <button
                           onClick={() => navigate(`/recipe/${recipe.id}`)}
-                          style={{ padding: '6px', backgroundColor: '#4CAF50', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                          className="card-btn card-btn-view"
                         >
                           Ver
                         </button>
                         <button
                           onClick={() => handleRemoveFromDay(day.key)}
-                          style={{ padding: '6px', backgroundColor: '#f44336', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                          className="card-btn card-btn-remove"
                         >
                           Excluir
                         </button>
                       </div>
                     </>
                   ) : (
-                    /* Card Vazio */
-                    <div style={{ textAlign: 'center', margin: 'auto 0' }}>
-                      <p style={{ color: '#999', fontSize: '14px', marginBottom: '15px' }}>Sem receita selecionada</p>
-                      <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                    <div className="recipe-week-card-empty">
+                      <p className="recipe-week-card-recipe-title">Sem receita selecionada</p>
+                      <div className="recipe-week-empty-actions">
                         <button
                           onClick={() => setModalDayKey(day.key)}
-                          style={{ padding: '8px 14px', backgroundColor: '#2196F3', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}
+                          className="card-btn card-btn-choose"
+                          style={{ padding: '8px 16px' }}
                         >
                           Escolher
                         </button>
                         <button
                           onClick={() => handleRandomizeDay(day.key)}
-                          style={{ padding: '8px 14px', backgroundColor: '#ff9800', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}
+                          className="card-btn card-btn-randomize"
+                          style={{ padding: '8px 16px' }}
                         >
                           Sortear
                         </button>
@@ -398,96 +365,50 @@ export default function RecipeWeek() {
         </main>
       </div>
 
-      {/* POPUP / MODAL DE ESCOLHA DA RECEITA */}
+      {/* MODAL DE ESCOLHA DA RECEITA */}
       {modalDayKey && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '20px',
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: '#fff',
-              borderRadius: '8px',
-              maxWidth: '550px',
-              width: '100%',
-              maxHeight: '80vh',
-              display: 'flex',
-              flexDirection: 'column',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-              overflow: 'hidden',
-            }}
-          >
-            {/* Header Modal */}
-            <div style={{ padding: '15px 20px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0 }}>Escolher receita para {DAYS_OF_WEEK.find((d) => d.key === modalDayKey)?.label}</h3>
+        <div className="recipe-week-modal-overlay">
+          <div className="recipe-week-modal-container">
+            <div className="recipe-week-modal-header">
+              <h3 className="recipe-week-modal-title">
+                Escolher receita para {DAYS_OF_WEEK.find((d) => d.key === modalDayKey)?.label}
+              </h3>
               <button
                 onClick={() => setModalDayKey(null)}
-                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#888' }}
+                className="recipe-week-modal-close-btn"
               >
                 ✕
               </button>
             </div>
 
-            {/* Busca no Modal */}
-            <div style={{ padding: '15px 20px', borderBottom: '1px solid #f0f0f0' }}>
+            <div className="recipe-week-modal-search-box">
               <input
                 type="text"
                 placeholder="Buscar na sua coleção..."
                 value={modalSearch}
                 onChange={(e) => setModalSearch(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid #ccc', fontSize: '14px', boxSizing: 'border-box' }}
+                className="recipe-week-input-text"
               />
             </div>
 
-            {/* Lista Resumida de Receitas */}
-            <div style={{ padding: '15px 20px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div className="recipe-week-modal-list">
               {myCollection
                 .filter((r) => r.title.toLowerCase().includes(modalSearch.toLowerCase()))
                 .map((r) => (
-                  <div
-                    key={r.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '8px',
-                      border: '1px solid #eee',
-                      borderRadius: '6px',
-                      backgroundColor: '#fafafa',
-                    }}
-                  >
+                  <div key={r.id} className="recipe-week-modal-item">
                     <img
                       src={r.img || 'https://via.placeholder.com/50'}
                       alt={r.title}
-                      style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }}
+                      className="recipe-week-modal-item-img"
                     />
-                    <div style={{ flex: 1 }}>
-                      <strong style={{ display: 'block', fontSize: '14px' }}>{r.title}</strong>
-                      <span style={{ fontSize: '12px', color: '#777' }}>⏱️ {r.prepareTime} min</span>
+                    <div className="recipe-week-modal-item-info">
+                      <strong className="recipe-week-modal-item-title">{r.title}</strong>
+                      <span className="recipe-week-modal-item-time">⏱️ {r.prepareTime} min</span>
                     </div>
                     <button
                       onClick={() => handleSelectRecipeForDay(r.id)}
-                      style={{
-                        padding: '6px 12px',
-                        backgroundColor: '#4CAF50',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                      }}
+                      className="card-btn card-btn-view"
+                      style={{ padding: '6px 12px' }}
                     >
                       Adicionar
                     </button>
@@ -495,7 +416,7 @@ export default function RecipeWeek() {
                 ))}
 
               {myCollection.length === 0 && (
-                <p style={{ textAlign: 'center', color: '#888', padding: '20px' }}>
+                <p className="recipe-week-modal-empty-msg">
                   Você ainda não possui receitas criadas ou favoritadas na sua coleção.
                 </p>
               )}

@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Link, useNavigate } from 'react-router-dom';
 
+import '../styles/Auth.css';
+import '../styles/index.css';
+
 export default function Register() {
   const navigate = useNavigate();
 
-  // Estados locais para os campos do formulário
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,73 +33,73 @@ export default function Register() {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '0 auto' }}>
-      <h2>Criar Conta</h2>
+    <div className="auth-container">
+      <h2 className="auth-title">Criar Conta</h2>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Nome Completo:</label>
+      <form onSubmit={handleSubmit} className="auth-form">
+        <div className="auth-field">
+          <label className="auth-label">Nome Completo</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Ex: Maria Silva"
             required
-            style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+            className="auth-input"
           />
         </div>
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>E-mail:</label>
+        <div className="auth-field">
+          <label className="auth-label">E-mail</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="seuemail@email.com"
             required
-            style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+            className="auth-input"
           />
         </div>
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Senha:</label>
+        <div className="auth-field">
+          <label className="auth-label">Senha</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+            className="auth-input"
           />
         </div>
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Confirmar Senha:</label>
+        <div className="auth-field">
+          <label className="auth-label">Confirmar Senha</label>
           <input
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
-            style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+            className="auth-input"
           />
-        </div>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input
-            type="checkbox"
-            id="adminCheck"
-            checked={requestAdmin}
-            onChange={(e) => setRequestAdmin(e.target.checked)}
-          />
-          <label htmlFor="adminCheck">Solicitar perfil de Administrador</label>
         </div>
 
-        <button type="submit" style={{ padding: '10px', cursor: 'pointer', marginTop: '10px' }}>
+        <label className="auth-checkbox-group">
+          <input
+            type="checkbox"
+            checked={requestAdmin}
+            onChange={(e) => setRequestAdmin(e.target.checked)}
+            className="auth-checkbox"
+          />
+          <span className="auth-checkbox-label">Solicitar perfil de Administrador</span>
+        </label>
+
+        <button type="submit" className="btn-auth-submit">
           Cadastrar
         </button>
       </form>
 
-      <p style={{ marginTop: '20px', textAlign: 'center' }}>
-        Já tem uma conta? <Link to="/login">Faça Login</Link>
+      <p className="auth-footer">
+        Já tem uma conta? <Link to="/login" className="auth-link">Faça Login</Link>
       </p>
     </div>
   );

@@ -3,6 +3,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useRecipes } from '../context/RecipesContext';
 
+import '../styles/RecipeForm.css';
+import '../styles/index.css';
+
 export default function RecipeEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -101,166 +104,165 @@ export default function RecipeEdit() {
 
 
   return (
-    <div style={{ maxWidth: '650px', margin: '0 auto', padding: '20px' }}>
-      <h2>Editar Receita</h2>
+    <div className="recipe-form-container">
+      <h2 className="recipe-form-title">Editar Receita</h2>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+      <form onSubmit={handleSubmit} className="recipe-form">
         {/* Título */}
-        <div>
-          <label style={{ display: 'block', fontWeight: 'bold' }}>Título da Receita *</label>
+        <div className="form-group">
+          <label className="form-label">Título da Receita *</label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            style={{ width: '100%', padding: '8px', marginTop: '4px' }}
+            className="form-input"
           />
         </div>
 
         {/* Descrição */}
-        <div>
-          <label style={{ display: 'block', fontWeight: 'bold' }}>Descrição Breve</label>
+        <div className="form-group">
+          <label className="form-label">Descrição Breve</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
-            style={{ width: '100%', padding: '8px', marginTop: '4px' }}
+            className="form-textarea"
           />
         </div>
 
         {/* Categoria e Imagem */}
-        <div style={{ display: 'flex', gap: '15px' }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', fontWeight: 'bold' }}>Categoria</label>
-            <select
+        <div className="form-row">
+          <div className="form-group-flex">
+            <label className="form-label">Categoria</label>
+            <textarea
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              style={{ width: '100%', padding: '8px', marginTop: '4px' }}
+              className="form-category"
             >
-              <option value="Café da Manhã">Café da Manhã</option>
-              <option value="Almoço">Almoço</option>
-              <option value="Jantar">Jantar</option>
-              <option value="Lanche">Lanche</option>
-              <option value="Sobremesa">Sobremesa</option>
-            </select>
+            </textarea>
           </div>
 
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', fontWeight: 'bold' }}>URL da Imagem</label>
+          <div className="form-group-flex">
+            <label className="form-label">URL da Imagem</label>
             <input
               type="url"
               value={img}
               onChange={(e) => setImg(e.target.value)}
-              style={{ width: '100%', padding: '8px', marginTop: '4px' }}
+              className="form-input"
             />
           </div>
         </div>
 
         {/* Tempo e Rendimento */}
-        <div style={{ display: 'flex', gap: '15px' }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', fontWeight: 'bold' }}>Tempo de Preparo (min) *</label>
+        <div className="form-row">
+          <div className="form-group-flex">
+            <label className="form-label">Tempo de Preparo (min) *</label>
             <input
               type="number"
               value={prepareTime}
               onChange={(e) => setPrepareTime(e.target.value)}
               min="1"
               required
-              style={{ width: '100%', padding: '8px', marginTop: '4px' }}
+              className="form-input"
             />
           </div>
 
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', fontWeight: 'bold' }}>Rendimento (porções) *</label>
+          <div className="form-group-flex">
+            <label className="form-label">Rendimento (porções) *</label>
             <input
               type="number"
               value={servings}
               onChange={(e) => setServings(e.target.value)}
               min="1"
               required
-              style={{ width: '100%', padding: '8px', marginTop: '4px' }}
+              className="form-input"
             />
           </div>
         </div>
 
         {/* Ingredientes */}
-        <div>
-          <label style={{ display: 'block', fontWeight: 'bold' }}>
-            Ingredientes * <small style={{ fontWeight: 'normal', color: '#666' }}>(separados por vírgula)</small>
+        <div className="form-group">
+          <label className="form-label">
+            Ingredientes * <span className="form-label-hint">(separados por vírgula)</span>
           </label>
           <textarea
             value={ingredients}
             onChange={(e) => setIngredients(e.target.value)}
             rows={3}
             required
-            style={{ width: '100%', padding: '8px', marginTop: '4px' }}
+            className="form-textarea"
           />
         </div>
 
         {/* Modo de Preparo */}
-        <div>
-          <label style={{ display: 'block', fontWeight: 'bold' }}>
-            Modo de Preparo * <small style={{ fontWeight: 'normal', color: '#666' }}>(separados por ponto ou quebra de linha)</small>
+        <div className="form-group">
+          <label className="form-label">
+            Modo de Preparo * <span className="form-label-hint">(separados por ponto ou quebra de linha)</span>
           </label>
           <textarea
             value={instructions}
             onChange={(e) => setInstructions(e.target.value)}
             rows={4}
             required
-            style={{ width: '100%', padding: '8px', marginTop: '4px' }}
+            className="form-textarea"
           />
         </div>
 
         {/* Restrições Adicionais */}
-        <div>
-          <label style={{ display: 'block', fontWeight: 'bold' }}>
-            Restrições Adicionais <small style={{ fontWeight: 'normal', color: '#666' }}>(separadas por vírgula)</small>
+        <div className="form-group">
+          <label className="form-label">
+            Restrições Adicionais <span className="form-label-hint">(separadas por vírgula)</span>
           </label>
           <input
             type="text"
             value={restrictions}
             onChange={(e) => setRestrictions(e.target.value)}
-            style={{ width: '100%', padding: '8px', marginTop: '4px' }}
+            className="form-input"
           />
         </div>
 
         {/* Filtros de Dieta */}
-        <div style={{ border: '1px solid #e0e0e0', padding: '15px', borderRadius: '6px', backgroundColor: '#fafafa' }}>
-          <strong style={{ display: 'block', marginBottom: '10px' }}>Filtros de Dieta:</strong>
+        <div className="form-fieldset-diet">
+          <strong className="fieldset-title">Filtros de Dieta:</strong>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+          <div className="diet-grid">
+            <label className="checkbox-label">
               <input
                 type="checkbox"
                 checked={isVegetarian}
                 onChange={(e) => setIsVegetarian(e.target.checked)}
+                className="checkbox-input"
               />
               Vegetariano
             </label>
 
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+            <label className="checkbox-label">
               <input
                 type="checkbox"
                 checked={isVegan}
                 onChange={(e) => setIsVegan(e.target.checked)}
+                className="checkbox-input"
               />
               Vegano
             </label>
 
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+            <label className="checkbox-label">
               <input
                 type="checkbox"
                 checked={isLactoseFree}
                 onChange={(e) => setIsLactoseFree(e.target.checked)}
+                className="checkbox-input"
               />
               Sem Lactose
             </label>
 
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+            <label className="checkbox-label">
               <input
                 type="checkbox"
                 checked={isGlutenFree}
                 onChange={(e) => setIsGlutenFree(e.target.checked)}
+                className="checkbox-input"
               />
               Sem Glúten
             </label>
@@ -268,48 +270,24 @@ export default function RecipeEdit() {
         </div>
 
         {/* Visibilidade Pública */}
-        <div style={{ border: '1px solid #e3f2fd', backgroundColor: '#e3f2fd', padding: '12px', borderRadius: '6px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+        <div className="form-box-public">
+          <label className="checkbox-label-bold">
             <input
               type="checkbox"
               checked={isPublic}
               onChange={(e) => setIsPublic(e.target.checked)}
+              className="checkbox-input"
             />
             Tornar esta receita pública na Comunidade
           </label>
         </div>
 
         {/* Botões de Ação */}
-        <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-          <button
-            type="submit"
-            style={{
-              flex: 1,
-              padding: '12px',
-              backgroundColor: '#4CAF50',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 'bold',
-              fontSize: '16px',
-              cursor: 'pointer'
-            }}
-          >
-            Salvar Alterações
+        <div className="btns-submit-cancel">
+          <button type="submit" className="btn-submit-recipe">
+            Guardar Alterações
           </button>
-
-          <button
-            type="button"
-            onClick={() => navigate('/my-recipes')}
-            style={{
-              padding: '12px 20px',
-              backgroundColor: '#ccc',
-              color: '#333',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
+          <button type="button" className="btn-cancel-recipe" onClick={() => navigate('/my-recipes')}>
             Cancelar
           </button>
         </div>

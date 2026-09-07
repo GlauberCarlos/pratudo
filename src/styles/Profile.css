@@ -1,0 +1,146 @@
+/* ==========================================================================
+   MEU PERFIL (Profile.css)
+   ========================================================================== */
+
+.profile-container {
+  max-width: 550px;
+  margin: 40px auto;
+  padding: 30px;
+  background-color: #FAFAFA;
+  border: 1px solid #E5E5E5;
+  border-radius: 12px;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #E5E5E5;
+}
+
+.profile-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #66BB6A;
+  color: #FAFAFA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.profile-title-box h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #5D5D5D;
+}
+
+.profile-role-badge {
+  display: inline-block;
+  font-size: 12px;
+  background-color: #ECFFED;
+  color: #2E7D32;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.profile-info-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.profile-info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  background-color: #FFFFFF;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+}
+
+.profile-info-label {
+  font-weight: 600;
+  color: #888888;
+  font-size: 14px;
+}
+
+.profile-info-value {
+  color: #5D5D5D;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+/* Seções de Ações */
+.profile-actions-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.btn-profile-action {
+  padding: 10px 16px;
+  background-color: #FFFFFF;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  color: #5D5D5D;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.btn-profile-action:hover {
+  border-color: #66BB6A;
+  background-color: #ECFFED;
+}
+
+/* Área de Segurança & Perigo */
+.profile-danger-zone {
+  padding-top: 20px;
+  border-top: 1px solid #E5E5E5;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-profile-logout {
+  padding: 12px;
+  background-color: #FFA726; /* Laranja-1 */
+  color: #FFFFFF;
+  border: none;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.btn-profile-logout:hover {
+  opacity: 0.9;
+}
+
+.btn-profile-delete {
+  padding: 10px;
+  background-color: transparent;
+  color: #E53935; /* Vermelho alerta */
+  border: 1px solid #E53935;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-profile-delete:hover {
+  background-color: #FFEBEE;
+}

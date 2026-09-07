@@ -1,0 +1,196 @@
+/* ==========================================================================
+   FORMULÁRIO DE RECEITAS - CRIAR & EDITAR (RecipeForm.css)
+   ========================================================================== */
+
+/* Container Principal */
+.recipe-form-container {
+  max-width: 650px;
+  margin: 0 auto;
+  padding: 30px 20px 50px 20px;
+}
+
+/* Título da Página */
+.recipe-form-title {
+  color: #5D5D5D; /* Cinza-1 */
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 25px;
+}
+
+/* Estrutura do Formulário */
+.recipe-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+}
+
+.form-group-flex {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Rótulos e Dicas */
+.form-label {
+  display: block;
+  font-weight: 700;
+  color: #5D5D5D; /* Cinza-1 */
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.form-label-hint {
+  font-weight: 400;
+  color: #888888;
+  font-size: 12px;
+}
+
+/* Inputs, Textareas e Selects */
+.form-input,
+.form-select,
+.form-category,
+.form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #E5E5E5; /* Cinza-2 */
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #5D5D5D; /* Cinza-1 */
+  background-color: #FAFAFA; /* Branco-1 */
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, outline 0.2s ease;
+}
+
+.form-category {
+    height: 41px;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #66BB6A; /* Verde-1 */
+  background-color: #FFFFFF;
+}
+
+.form-textarea {
+  resize: vertical;
+}
+
+/* Caixa de Filtros de Dieta (Checkboxes) */
+.form-fieldset-diet {
+  border: 1px solid #E5E5E5;
+  padding: 16px;
+  border-radius: 8px;
+  background-color: #FAFAFA;
+}
+
+.fieldset-title {
+  display: block;
+  font-weight: 700;
+  color: #5D5D5D;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.diet-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #5D5D5D;
+}
+
+.checkbox-input {
+  accent-color: #66BB6A; /* Verde-1 */
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* Caixa de Visibilidade Pública */
+.form-box-public {
+  border: 1px solid #C8E6C9; /* Tom suave de Verde */
+  background-color: #ECFFED; /* Verde-3 */
+  padding: 14px 16px;
+  border-radius: 8px;
+}
+
+.checkbox-label-bold {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  color: #2E7D32; /* Verde-2 */
+  font-size: 14px;
+}
+
+/* Botão de Envio */
+.btns-submit-cancel{
+    display: flex;
+    justify-content: space-between;
+}
+
+.btn-submit-recipe {
+  padding: 12px 20px;
+  background-color: #66BB6A; /* Verde-1 */
+  color: #FAFAFA; /* Branco-1 */
+  border: none;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+.btn-cancel-recipe {
+  padding: 12px 20px;
+  background-color: #E65100; /* Verde-1 */
+  color: #FAFAFA; /* Branco-1 */
+  border: none;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+.btn-submit-recipe:hover {
+  opacity: 0.9;
+}
+
+.btn-submit-recipe:active {
+  transform: scale(0.99);
+}
+
+/* Responsividade */
+@media (max-width: 500px) {
+  .form-row {
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .diet-grid {
+    grid-template-columns: 1fr;
+  }
+}

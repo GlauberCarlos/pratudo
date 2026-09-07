@@ -1,0 +1,414 @@
+/* ==========================================================================
+   PLANEJADOR DE CARDÁPIO SEMANAL (RecipeWeek.css)
+   ========================================================================== */
+
+/* Layout Principal */
+.recipe-week-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 20px 50px 20px;
+}
+
+.recipe-week-title {
+    color: #5D5D5D;
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0 0 25px 0;
+}
+
+.recipe-week-layout {
+    display: flex;
+    gap: 25px;    
+    align-items: flex-start;
+}
+
+/* ==========================================================================
+   PAINEL LATERAL DE CONFIGURAÇÕES
+   ========================================================================== */
+.recipe-week-sidebar {
+    background-color: #FAFAFA;
+    border: 1px solid #E5E5E5;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.recipe-week-days-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 10px;
+    margin-bottom: 20px;
+}
+
+.recipe-week-section-label {
+    margin: 0 auto;
+    display: block;
+    color: #5D5D5D;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.recipe-week-days-horizontal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.recipe-week-day-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.recipe-week-day-letter {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2E7D32;
+    margin-bottom: 4px;
+}
+
+.checkbox-input {
+    accent-color: #FFA726;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.recipe-week-divider {
+    border: none;
+    border-top: 1px solid #E5E5E5;
+    margin: 15px 0;
+}
+
+.recipe-week-filters-group {
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #5D5D5D;
+    font-size: 14px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.recipe-week-restrictions-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.recipe-week-input-text {
+    width: 100%;
+    height: 3rem;
+    padding: 10px 14px;
+    background-color: #ffffff;
+    border: 1px solid #E5E5E5;
+    border-radius: 6px;
+    color: #5D5D5D;
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.recipe-week-input-text:focus {
+    border-color: #FFA726;
+}
+
+.recipe-week-small-help {
+    color: #888888;
+    font-size: 11px;
+    display: block;
+    margin-top: 4px;
+}
+
+.recipe-week-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-generate-menu {
+    width: 100%;
+    padding: 10px 18px;
+    background-color: #FFA726;
+    color: #FAFAFA;
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.btn-generate-menu:hover {
+    opacity: 0.9;
+}
+
+.btn-clear-menu {
+    width: 100%;
+    padding: 10px 18px;
+    background-color: #EF5350;
+    color: #FAFAFA;
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.btn-clear-menu:hover {
+    opacity: 0.9;
+}
+
+/* ==========================================================================
+   GRADE E CARDS DOS DIAS
+   ========================================================================== */
+.recipe-week-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.recipe-week-card {
+    display: flex;
+    flex-direction: column;
+    border: 2px solid #FFA726;
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: #FAFAFA;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    min-height: 290px;
+    max-width: 250px;
+}
+
+.recipe-week-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+}
+
+.recipe-week-card-header {
+    color: #FFA726;
+    padding: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    text-align: center;
+}
+
+.recipe-week-card-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.recipe-week-card-recipe-title {
+    text-align: center;
+    color: #5D5D5D;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+}
+
+.recipe-week-card-recipe-description {
+    text-align: left;
+    color: #5D5D5D;
+    font-size: 14px;
+    margin: 0 0 4px 10px;
+}
+
+.recipe-week-img-wrapper {
+    height: 130px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    background-color: #E5E5E5;
+}
+
+.recipe-week-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.recipe-week-card-time {
+    padding-left: 10px;
+    font-size: 12px;
+    color: #aeaeae;
+}
+
+.recipe-week-card-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 3px;
+    margin: 12px 0;
+    padding: 0 10px;
+}
+
+.card-btn {
+    padding: 8px 0;
+    width: 120px;
+    color: #FAFAFA;
+    border: none;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: opacity 0.2s ease;
+}
+
+.card-btn:hover {
+    opacity: 0.9;
+}
+
+.card-btn-choose {
+    background-color: #FFA726;
+}
+
+.card-btn-randomize {
+    background-color: #26acff;
+}
+
+.card-btn-view {
+    background-color: #66BB6A;
+}
+
+.card-btn-remove {
+    background-color: #EF5350;
+}
+
+.recipe-week-card-empty {
+    text-align: center;
+    margin: 70px 0;
+}
+
+.recipe-week-empty-text {
+    color: #888888;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.recipe-week-empty-actions {
+    display: flex;
+    gap: 5px;
+    margin: 12px 0;
+    padding: 0 10px;
+}
+
+/* ==========================================================================
+   MODAL DE SELEÇÃO
+   ========================================================================== */
+.recipe-week-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.recipe-week-modal-container {
+    background-color: #FAFAFA;
+    border-radius: 10px;
+    border: 2px solid #FFA726;
+    max-width: 550px;
+    width: 100%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+.recipe-week-modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #E5E5E5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.recipe-week-modal-title {
+    color: #5D5D5D;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.recipe-week-modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #5D5D5D;
+}
+
+.recipe-week-modal-search-box {
+    padding: 15px 20px;
+    border-bottom: 1px solid #E5E5E5;
+}
+
+.recipe-week-modal-list {
+    padding: 15px 20px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.recipe-week-modal-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border: 1px solid #E5E5E5;
+    border-radius: 6px;
+    background-color: #ffffff;
+}
+
+.recipe-week-modal-item-img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.recipe-week-modal-item-info {
+    flex: 1;
+}
+
+.recipe-week-modal-item-title {
+    display: block;
+    font-size: 14px;
+    color: #5D5D5D;
+    font-weight: 600;
+}
+
+.recipe-week-modal-item-time {
+    font-size: 12px;
+    color: #888888;
+}
+
+.recipe-week-modal-empty-msg {
+    text-align: center;
+    color: #888888;
+    padding: 20px;
+}

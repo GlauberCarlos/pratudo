@@ -1,13 +1,11 @@
 // App
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
-// Layout & Rotas Guardiãs
 import MainLayout from './components/MainLayout';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
-import GuestRoute from './components/GuessRoute';
+import GuestRoute from './components/GuestRoute';
 
-// Páginas
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
