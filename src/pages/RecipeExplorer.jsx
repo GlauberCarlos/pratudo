@@ -199,6 +199,7 @@ export default function RecipeExplorer() {
                     alt={recipe.title}
                     className="recipe-card-image"
                   />
+                  {user && (
                   <button
                     onClick={() => toggleFavorite(recipe.id)}
                     className="favorite-btn-overlay"
@@ -206,6 +207,7 @@ export default function RecipeExplorer() {
                   >
                     {isFav ? '❤️' : '🤍'}
                   </button>
+                  )}
                 </div>
 
                 {/* Conteúdo */}

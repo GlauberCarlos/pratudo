@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 
+import '../styles/AdminDashboard.css';
+import '../styles/index.css';
+
 export default function AdminDashboard() {
   const { 
     getRegisteredUsers, 
@@ -48,93 +51,122 @@ export default function AdminDashboard() {
   const activeUsers = usersList.filter((u) => u.status === 'active');
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-      <h2>Painel do Administrador</h2>
+    <div className="admin-container">
+      <h2 className="admin-title">Painel do Administrador</h2>
 
       {/* Cartões de Estatísticas */}
-      <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', marginTop: '20px' }}>
-        <div style={{ flex: 1, padding: '15px', border: '1px solid #ccc', borderRadius: '8px', backgroundColor: '#f9f9f9' }}>
-          <h4>Total de Usuários</h4>
-          <p style={{ fontSize: '24px', fontWeight: 'bold', margin: '5px 0' }}>{usersList.length}</p>
+      <div className="stats-grid">
+        <div className="stat-card stat-card-total">
+          <h4 className="stat-card-title">Total de Usuários</h4>
+          <p className="stat-card-number">{usersList.length}</p>
         </div>
-        <div style={{ flex: 1, padding: '15px', border: '1px solid #ccc', borderRadius: '8px', backgroundColor: '#e8f5e9' }}>
-          <h4>Usuários Ativos</h4>
-          <p style={{ fontSize: '24px', fontWeight: 'bold', margin: '5px 0' }}>{activeUsers.length}</p>
+        <div className="stat-card stat-card-active">
+          <h4 className="stat-card-title">Usuários Ativos</h4>
+          <p className="stat-card-number">{activeUsers.length}</p>
         </div>
-        <div style={{ flex: 1, padding: '15px', border: '1px solid #ccc', borderRadius: '8px', backgroundColor: '#fff3e0' }}>
-          <h4>Solicitações Admin</h4>
-          <p style={{ fontSize: '24px', fontWeight: 'bold', margin: '5px 0' }}>{pendingAdmins.length}</p>
+        <div className="stat-card stat-card-pending">
+          <h4 className="stat-card-title">Solicitações Admin</h4>
+          <p className="stat-card-number">{pendingAdmins.length}</p>
         </div>
       </div>
 
       {/* Fila de Solicitações de Admin */}
-      <section style={{ marginBottom: '40px' }}>
-        <h3>Solicitações de Administrador Pendentes</h3>
+      <section className="admin-section">
+        <h3 className="admin-section-title">Solicitações de Administrador Pendentes</h3>
         {pendingAdmins.length === 0 ? (
-          <p style={{ color: '#666' }}>Nenhuma solicitação pendente no momento.</p>
+          <p className="empty-state-text">Nenhuma solicitação pendente no momento.</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+          <div className="table-responsive">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>E-mail</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingAdmins.map((u) => (
+                  <tr key={u.id}>
+                    <td>{u.name}</td>
+                    <td>{u.email}</td>
+                    <td>
+                      <div className="actions-cell">
+                        <button 
+                          onClick={() => handleApprove(u.id)} 
+                          className="btn-action btn-action-approve"
+                        >
+                          Aprovar
+                        </button>
+                        <button 
+                          onClick={() => handleReject(u.id)} 
+                          className="btn-action btn-action-reject"
+                        >
+                          Rejeitar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* Lista Geral de Usuários */}
+      <section className="admin-section">
+        <h3 className="admin-section-title">Gerenciamento de Usuários</h3>
+        <div className="table-responsive">
+          <table className="admin-table">
             <thead>
-              <tr style={{ backgroundColor: '#f0f0f0', textAlign: 'left' }}>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>Nome</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>E-mail</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>Ações</th>
+              <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Cargo</th>
+                <th>Status</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
-              {pendingAdmins.map((u) => (
+              {usersList.map((u) => (
                 <tr key={u.id}>
-                  <td style={{ padding: '8px', border: '1px solid #ddd' }}>{u.name}</td>
-                  <td style={{ padding: '8px', border: '1px solid #ddd' }}>{u.email}</td>
-                  <td style={{ padding: '8px', border: '1px solid #ddd', display: 'flex', gap: '10px' }}>
-                    <button onClick={() => handleApprove(u.id)} style={{ backgroundColor: '#4CAF50', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>
-                      Aprovar
-                    </button>
-                    <button onClick={() => handleReject(u.id)} style={{ backgroundColor: '#ff9800', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>
-                      Rejeitar
-                    </button>
+                  <td>{u.name}</td>
+                  <td>{u.email}</td>
+                  <td>
+                    <span className={`badge ${
+                      u.role === 'admin' ? 'badge-role-admin' :
+                      u.role === 'admin_pending' ? 'badge-role-pending' : 'badge-role-user'
+                    }`}>
+                      {u.role}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`badge ${u.status === 'active' ? 'badge-status-active' : 'badge-status-inactive'}`}>
+                      {u.status === 'active' ? 'Ativo' : 'Inativo'}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="actions-cell">
+                      <button 
+                        onClick={() => handleToggleStatus(u.id)} 
+                        className="btn-action btn-action-toggle"
+                      >
+                        {u.status === 'active' ? 'Desativar' : 'Ativar'}
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(u.id)} 
+                        className="btn-action btn-action-delete"
+                      >
+                        Excluir
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        )}
-      </section>
-
-      {/* Lista Geral de Usuários */}
-      <section>
-        <h3>Gerenciamento de Usuários</h3>
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
-          <thead>
-            <tr style={{ backgroundColor: '#f0f0f0', textAlign: 'left' }}>
-              <th style={{ padding: '8px', border: '1px solid #ddd' }}>Nome</th>
-              <th style={{ padding: '8px', border: '1px solid #ddd' }}>E-mail</th>
-              <th style={{ padding: '8px', border: '1px solid #ddd' }}>Cargo</th>
-              <th style={{ padding: '8px', border: '1px solid #ddd' }}>Status</th>
-              <th style={{ padding: '8px', border: '1px solid #ddd' }}>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {usersList.map((u) => (
-              <tr key={u.id}>
-                <td style={{ padding: '8px', border: '1px solid #ddd' }}>{u.name}</td>
-                <td style={{ padding: '8px', border: '1px solid #ddd' }}>{u.email}</td>
-                <td style={{ padding: '8px', border: '1px solid #ddd' }}><strong>{u.role}</strong></td>
-                <td style={{ padding: '8px', border: '1px solid #ddd', color: u.status === 'active' ? 'green' : 'red' }}>
-                  {u.status === 'active' ? 'Ativo' : 'Inativo'}
-                </td>
-                <td style={{ padding: '8px', border: '1px solid #ddd', display: 'flex', gap: '10px' }}>
-                  <button onClick={() => handleToggleStatus(u.id)} style={{ cursor: 'pointer' }}>
-                    {u.status === 'active' ? 'Desativar' : 'Ativar'}
-                  </button>
-                  <button onClick={() => handleDelete(u.id)} style={{ backgroundColor: '#ff4d4d', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>
-                    Excluir
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        </div>
       </section>
     </div>
   );

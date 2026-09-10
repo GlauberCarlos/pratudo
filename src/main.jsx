@@ -16,13 +16,13 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
       <RecipesProvider>
-      <FavoritesProvider>
-        <RatingsProvider>
-          <CommentsProvider>
-            <App />
-          </CommentsProvider>
-        </RatingsProvider>
-      </FavoritesProvider>
+        <FavoritesProvider>
+          <RatingsProvider>
+            <CommentsProvider>
+              <App />
+            </CommentsProvider>
+          </RatingsProvider>
+        </FavoritesProvider>
       </RecipesProvider>
     </AuthProvider>
   </StrictMode>,

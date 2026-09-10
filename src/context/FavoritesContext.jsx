@@ -1,22 +1,36 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from '../hooks/useAuth';
 
 const FavoritesContext = createContext();
 
 export function FavoritesProvider({ children }) {
-  const [favorites, setFavorites] = useState(() => {
+  const { user } = useAuth();
+
+  const loadFavorites = (userId) => {
+    if (!userId) return [];
     try {
-      const saved = localStorage.getItem('favorites');
+      const saved = localStorage.getItem(`@my-menu:favorites_${userId}`);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
-  });
+  };
+
+  const [favorites, setFavorites] = useState(() => loadFavorites(user?.id));
 
   useEffect(() => {
-    localStorage.setItem('favorites', JSON.stringify(favorites));
-  }, [favorites]);
+    setFavorites(loadFavorites(user?.id));
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user?.id) {
+      localStorage.setItem(`@my-menu:favorites_${user.id}`, JSON.stringify(favorites));
+    }
+  }, [favorites, user?.id]);
 
   const toggleFavorite = (recipeId) => {
+    if (!user) return;
+
     setFavorites((prev) =>
       prev.includes(recipeId)
         ? prev.filter((id) => id !== recipeId)
@@ -33,7 +47,10 @@ export function FavoritesProvider({ children }) {
   );
 }
 
-// Hook personalizado para usar o contexto facilmente
 export function useFavorites() {
-  return useContext(FavoritesContext);
+  const context = useContext(FavoritesContext);
+  if (!context) {
+    throw new Error('useFavorites deve ser usado dentro de um FavoritesProvider');
+  }
+  return context;
 }

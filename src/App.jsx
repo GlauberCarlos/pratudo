@@ -17,6 +17,7 @@ import RecipeNew from './pages/RecipeNew';
 import RecipeEdit from './pages/RecipeEdit';
 import RecipeDetails from './pages/RecipeDetails';
 import RecipeExplorer from './pages/RecipeExplorer';
+import NotFound from './pages/NotFound';
 
 export default function App() {
   return (
@@ -51,6 +52,7 @@ export default function App() {
           </Route>
 
         </Route>
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
