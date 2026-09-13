@@ -1,34 +1,37 @@
-import { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
+//register
+import { useState, useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 
 import '../styles/Auth.css';
 import '../styles/index.css';
 
 export default function Register() {
-  const navigate = useNavigate();
-
   const [name, setName] = useState('');
+  const [lastName, setlastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [requestAdmin, setRequestAdmin] = useState(false);
+  const { register } = useContext(AuthContext);
+  const [errorMsg, setErrorMsg] = useState('');
+  const navigate = useNavigate();
 
-  const { register } = useAuth();
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMsg('');
+
     if (password !== confirmPassword) {
       alert('As senhas não coincidem!');
       return;
     }
 
-    const result = register(name, email, password, requestAdmin);
+    const result = await register(name, lastName, email, password, requestAdmin);
     if (result.success) {
       alert('Cadastro realizado com sucesso!');
       navigate('/login');
     } else {
-      alert(result.message);
+      setErrorMsg(result.message);
     }
   };
 
@@ -38,12 +41,24 @@ export default function Register() {
 
       <form onSubmit={handleSubmit} className="auth-form">
         <div className="auth-field">
-          <label className="auth-label">Nome Completo</label>
+          <label className="auth-label">Nome</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Ex: Maria Silva"
+            required
+            className="auth-input"
+          />
+        </div>
+
+        <div className="auth-field">
+          <label className="auth-label">Apelido</label>
+          <input
+            type="text"
+            value={lastName}
+            onChange={(e) => setlastName(e.target.value)}
+            placeholder=""
             required
             className="auth-input"
           />

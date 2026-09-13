@@ -1,23 +1,28 @@
-import { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
+//login
+import { useState, useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 
 import '../styles/Auth.css';
 import '../styles/index.css';
 
 export default function Login() {
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login } = useAuth();
+  const [errorMsg, setErrorMsg] = useState('');
+  const { login } = useContext(AuthContext);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = login(email, password);
+    setErrorMsg('');
+
+    const result = await login(email, password);
+
     if (result.success) {
-      navigate('/profile');
+      navigate('/my-recipes');
     } else {
-      alert(result.message);
+      setErrorMsg(result.message);
     }
   };
 

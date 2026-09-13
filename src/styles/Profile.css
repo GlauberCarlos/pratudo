@@ -115,7 +115,7 @@
 
 .btn-profile-logout {
   padding: 12px;
-  background-color: #FFA726; /* Laranja-1 */
+  background-color: #FFA726; 
   color: #FFFFFF;
   border: none;
   border-radius: 50px;
@@ -132,7 +132,7 @@
 .btn-profile-delete {
   padding: 10px;
   background-color: transparent;
-  color: #E53935; /* Vermelho alerta */
+  color: #E53935; 
   border: 1px solid #E53935;
   border-radius: 50px;
   font-weight: 600;

@@ -5,7 +5,7 @@ import '../styles/Profile.css';
 import '../styles/index.css';
 
 export default function Profile() {
-  const { user, logout } = useAuth();
+  const { user, logout, deleteAccount } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -13,8 +13,24 @@ export default function Profile() {
     navigate('/login');
   };
 
-  const handlePlaceholderAction = (actionName) => {
-    alert(`Ação "${actionName}" em desenvolvimento.`);
+  const editProfile = () => {
+    navigate('/edit-profile');
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      'Tem certeza de que deseja excluir sua conta? Esta ação é irreversível e apagará todas as suas receitas.'
+    );
+
+    if (confirmed) {
+      const result = await deleteAccount();
+      if (result.success) {
+        alert('Sua conta foi excluída com sucesso.');
+        navigate('/login');
+      } else {
+        setErrorMsg(result.message);
+      }
+    }
   };
 
   // Primeira letra do nome para o Avatar
@@ -40,6 +56,10 @@ export default function Profile() {
           <span className="profile-info-value">{user?.name || 'Não informado'}</span>
         </div>
         <div className="profile-info-item">
+          <span className="profile-info-label">Apelido:</span>
+          <span className="profile-info-value">{user?.lastName || 'Não informado'}</span>
+        </div>
+        <div className="profile-info-item">
           <span className="profile-info-label">E-mail:</span>
           <span className="profile-info-value">{user?.email || 'Não informado'}</span>
         </div>
@@ -47,17 +67,11 @@ export default function Profile() {
 
       {/* Botões de Edição (Futuras Funcionalidades) */}
       <div className="profile-actions-section">
-        <button 
+        <button
           className="btn-profile-action"
-          onClick={() => handlePlaceholderAction('Editar Dados')}
+          onClick={() => editProfile()}
         >
           ✏️ Editar Informações Pessoais
-        </button>
-        <button 
-          className="btn-profile-action"
-          onClick={() => handlePlaceholderAction('Alterar Senha')}
-        >
-          🔒 Alterar Senha
         </button>
       </div>
 
@@ -66,11 +80,8 @@ export default function Profile() {
         <button onClick={handleLogout} className="btn-profile-logout">
           Sair da Conta
         </button>
-        <button 
-          onClick={() => handlePlaceholderAction('Apagar Conta')}
-          className="btn-profile-delete"
-        >
-          Excluir minha conta
+        <button onClick={handleDeleteAccount} className="btn-profile-delete">
+          Excluir conta
         </button>
       </div>
     </div>

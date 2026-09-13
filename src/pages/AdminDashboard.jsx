@@ -1,54 +1,74 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import api from '../services/api';
 
 import '../styles/AdminDashboard.css';
 import '../styles/index.css';
 
 export default function AdminDashboard() {
-  const { 
-    getRegisteredUsers, 
-    approveAdmin, 
-    rejectAdmin, 
-    toggleUserStatus, 
-    deleteUser 
-  } = useAuth();
-
   const [usersList, setUsersList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Atualiza a lista exibida na tela
-  const loadUsers = () => {
-    setUsersList(getRegisteredUsers());
+  // Busca lista de usuários
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/admin/users');
+      setUsersList(response.data);
+    } catch (error) {
+      alert(error.response?.data?.message || 'Erro ao carregar lista de usuários.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     loadUsers();
   }, []);
 
-  const handleApprove = (id) => {
-    approveAdmin(id);
-    loadUsers();
-  };
-
-  const handleReject = (id) => {
-    rejectAdmin(id);
-    loadUsers();
-  };
-
-  const handleToggleStatus = (id) => {
-    toggleUserStatus(id);
-    loadUsers();
-  };
-
-  const handleDelete = (id) => {
-    if (confirm('Tem certeza que deseja excluir permanentemente este usuário?')) {
-      deleteUser(id);
+  const handleApprove = async (userId) => {
+    try {
+      await api.patch(`/admin/users/${userId}/approve-admin`, { role: 'admin' });
       loadUsers();
+    } catch (error) {
+      alert('Erro ao aprovar usuário.');
     }
   };
 
-  // Separação por categorias
+  const handleReject = async (userId) => {
+    try {
+      await api.patch(`/admin/users/${userId}/approve-admin`, { role: 'user' });
+      loadUsers();
+    } catch (error) {
+      alert('Erro ao rejeitar solicitação.');
+    }
+  };
+
+  const handleToggleStatus = async (userId) => {
+    try {
+      await api.patch(`/admin/users/${userId}/toggle-status`);
+      loadUsers();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Erro ao alterar status do usuário.');
+    }
+  };
+
+  const handleDelete = async (userId) => {
+    if (window.confirm('Tem certeza que deseja excluir permanentemente este usuário?')) {
+      try {
+        await api.delete(`/admin/users/${userId}`);
+        loadUsers();
+      } catch (error) {
+        alert('Erro ao excluir usuário.');
+      }
+    }
+  };
+
   const pendingAdmins = usersList.filter((u) => u.role === 'admin_pending');
   const activeUsers = usersList.filter((u) => u.status === 'active');
+
+  if (loading) {
+    return <div className="admin-container"><p>Carregando painel...</p></div>;
+  }
 
   return (
     <div className="admin-container">
@@ -87,19 +107,19 @@ export default function AdminDashboard() {
               </thead>
               <tbody>
                 {pendingAdmins.map((u) => (
-                  <tr key={u.id}>
-                    <td>{u.name}</td>
+                  <tr key={u._id}>
+                    <td>{u.name} {u.lastName}</td>
                     <td>{u.email}</td>
                     <td>
                       <div className="actions-cell">
                         <button 
-                          onClick={() => handleApprove(u.id)} 
+                          onClick={() => handleApprove(u._id)} 
                           className="btn-action btn-action-approve"
                         >
                           Aprovar
                         </button>
                         <button 
-                          onClick={() => handleReject(u.id)} 
+                          onClick={() => handleReject(u._id)} 
                           className="btn-action btn-action-reject"
                         >
                           Rejeitar
@@ -130,8 +150,8 @@ export default function AdminDashboard() {
             </thead>
             <tbody>
               {usersList.map((u) => (
-                <tr key={u.id}>
-                  <td>{u.name}</td>
+                <tr key={u._id}>
+                  <td>{u.name} {u.lastName}</td>
                   <td>{u.email}</td>
                   <td>
                     <span className={`badge ${
@@ -149,13 +169,13 @@ export default function AdminDashboard() {
                   <td>
                     <div className="actions-cell">
                       <button 
-                        onClick={() => handleToggleStatus(u.id)} 
+                        onClick={() => handleToggleStatus(u._id)} 
                         className="btn-action btn-action-toggle"
                       >
                         {u.status === 'active' ? 'Desativar' : 'Ativar'}
                       </button>
                       <button 
-                        onClick={() => handleDelete(u.id)} 
+                        onClick={() => handleDelete(u._id)} 
                         className="btn-action btn-action-delete"
                       >
                         Excluir

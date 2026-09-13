@@ -26,7 +26,7 @@ export default function Header() {
         {/* NAVEGAÇÃO CENTRAL */}
         <nav className="header-nav">
           <NavLink to="/" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
-            Página Inicial
+            Início
           </NavLink>
 
           <NavLink to="/explorer" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
@@ -46,7 +46,7 @@ export default function Header() {
 
           {user?.role === 'admin' && (
             <NavLink to="/admin" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
-              Painel Admin
+              Painel Administrativo
             </NavLink>
           )}
         </nav>

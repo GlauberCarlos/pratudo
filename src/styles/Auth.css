@@ -114,3 +114,22 @@
 .auth-link:hover {
   text-decoration: underline;
 }
+
+.profile-actions-cancel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.btn-profile-cancel {
+  padding: 12px;
+  background-color: #E53935; 
+  color: #FFFFFF;
+  border: none;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
