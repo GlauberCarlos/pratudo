@@ -1,6 +1,6 @@
+// RecipeNew
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
 import { useRecipes } from '../context/RecipesContext';
 
 import '../styles/RecipeForm.css';
@@ -9,13 +9,12 @@ import '../styles/index.css';
 export default function RecipeNew() {
   const navigate = useNavigate();
   const { addRecipe } = useRecipes();
-  const { user } = useAuth();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('Almoço');
+  const [category, setCategory] = useState('Fácil');
   const [img, setImg] = useState('');
-  const [prepareTime, setPrepareTime] = useState('');
+  const [prepTime, setPrepTime] = useState('');
   const [servings, setServings] = useState('');
   const [ingredients, setIngredients] = useState('');
   const [instructions, setInstructions] = useState('');
@@ -26,10 +25,10 @@ export default function RecipeNew() {
   const [isLactoseFree, setIsLactoseFree] = useState(false);
   const [isGlutenFree, setIsGlutenFree] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!title.trim() || !prepareTime || !servings || !ingredients.trim() || !instructions.trim()) {
+    if (!title.trim() || !prepTime || !servings || !ingredients.trim() || !instructions.trim()) {
       alert('Por favor, preencha todos os campos obrigatórios (*)');
       return;
     }
@@ -50,13 +49,12 @@ export default function RecipeNew() {
       .filter(Boolean);
 
     const newRecipe = {
-      userId: user.id,
       title,
       description,
       category,
       img: img.trim() || 'https://via.placeholder.com/300x200?text=Sem+Imagem',
-      prepareTime: Number(prepareTime),
-      servings: Number(servings),
+      prepTime: `${prepTime} min`,
+      servings: `${servings} porções`,
       ingredients: ingredientsArray,
       instructions: instructionsArray,
       restrictions: restrictionsArray,
@@ -67,8 +65,13 @@ export default function RecipeNew() {
       isGlutenFree,
     };
 
-    addRecipe(newRecipe);
-    navigate('/my-recipes');
+    const result = await addRecipe(newRecipe);
+    if (result.success) {
+      alert('Receita salva com sucesso!');
+      navigate('/my-recipes');
+    } else {
+      alert(result.message);
+    }
   };
 
   return (
@@ -76,7 +79,6 @@ export default function RecipeNew() {
       <h2 className="recipe-form-title">Nova Receita</h2>
 
       <form onSubmit={handleSubmit} className="recipe-form">
-        {/* Título */}
         <div className="form-group">
           <label className="form-label">Título da Receita *</label>
           <input
@@ -89,7 +91,6 @@ export default function RecipeNew() {
           />
         </div>
 
-        {/* Descrição */}
         <div className="form-group">
           <label className="form-label">Descrição Breve</label>
           <textarea
@@ -101,16 +102,19 @@ export default function RecipeNew() {
           />
         </div>
 
-        {/* Categoria e Imagem */}
         <div className="form-row">
           <div className="form-group-flex">
-            <label className="form-label">Categoria</label>
-            <textarea
+            <label className="form-label">Dificuldade *</label>
+            <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="form-category"
-            >              
-            </textarea>
+              className="form-input"
+              required
+            >
+              <option value="Fácil">Fácil</option>
+              <option value="Médio">Médio</option>
+              <option value="Difícil">Difícil</option>
+            </select>
           </div>
 
           <div className="form-group-flex">
@@ -125,14 +129,13 @@ export default function RecipeNew() {
           </div>
         </div>
 
-        {/* Tempo de Preparo e Porções (Obrigatórios) */}
         <div className="form-row">
           <div className="form-group-flex">
             <label className="form-label">Tempo de Preparo (min) *</label>
             <input
               type="number"
-              value={prepareTime}
-              onChange={(e) => setPrepareTime(e.target.value)}
+              value={prepTime}
+              onChange={(e) => setPrepTime(e.target.value)}
               placeholder="Ex: 45"
               min="1"
               required
@@ -154,7 +157,6 @@ export default function RecipeNew() {
           </div>
         </div>
 
-        {/* Ingredientes */}
         <div className="form-group">
           <label className="form-label">
             Ingredientes * <span className="form-label-hint">(separados por vírgula)</span>
@@ -169,7 +171,6 @@ export default function RecipeNew() {
           />
         </div>
 
-        {/* Modo de Preparo */}
         <div className="form-group">
           <label className="form-label">
             Modo de Preparo * <span className="form-label-hint">(separados por ponto ou quebra de linha)</span>
@@ -184,7 +185,6 @@ export default function RecipeNew() {
           />
         </div>
 
-        {/* Restrições Adicionais */}
         <div className="form-group">
           <label className="form-label">
             Restrições Adicionais <span className="form-label-hint">(separadas por vírgula)</span>
@@ -193,15 +193,13 @@ export default function RecipeNew() {
             type="text"
             value={restrictions}
             onChange={(e) => setRestrictions(e.target.value)}
-            placeholder="Ex: Sem Açúcar, Low Carb, Sem Oleaginosas"
+            placeholder="Ex: Sem Açúcar, Low Carb"
             className="form-input"
           />
         </div>
 
-        {/* Filtros de Dieta (Checkboxes) */}
         <div className="form-fieldset-diet">
           <strong className="fieldset-title">Filtros de Dieta:</strong>
-
           <div className="diet-grid">
             <label className="checkbox-label">
               <input
@@ -212,7 +210,6 @@ export default function RecipeNew() {
               />
               Vegetariano
             </label>
-
             <label className="checkbox-label">
               <input
                 type="checkbox"
@@ -222,7 +219,6 @@ export default function RecipeNew() {
               />
               Vegano
             </label>
-
             <label className="checkbox-label">
               <input
                 type="checkbox"
@@ -232,7 +228,6 @@ export default function RecipeNew() {
               />
               Sem Lactose
             </label>
-
             <label className="checkbox-label">
               <input
                 type="checkbox"
@@ -245,7 +240,6 @@ export default function RecipeNew() {
           </div>
         </div>
 
-        {/* Visibilidade Pública */}
         <div className="form-box-public">
           <label className="checkbox-label-bold">
             <input
@@ -258,7 +252,6 @@ export default function RecipeNew() {
           </label>
         </div>
 
-        {/* Botão de Envio */}
         <button type="submit" className="btn-submit-recipe">
           Guardar Receita
         </button>

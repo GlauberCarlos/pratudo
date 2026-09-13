@@ -1,4 +1,3 @@
-// RecipeEdit.jsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useRecipes } from '../context/RecipesContext';
@@ -9,15 +8,16 @@ import '../styles/index.css';
 export default function RecipeEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { recipes, updateRecipe } = useRecipes();
+  const { recipes, updateRecipe, loading } = useRecipes();
 
-  const recipeToEdit = recipes.find((item) => item.id === Number(id));
+  // Localiza a receita pelo _id do Mongoose
+  const recipeToEdit = recipes.find((item) => item._id === id);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Almoço');
   const [img, setImg] = useState('');
-  const [prepareTime, setPrepareTime] = useState('');
+  const [prepTime, setPrepTime] = useState('');
   const [servings, setServings] = useState('');
   const [ingredients, setIngredients] = useState('');
   const [instructions, setInstructions] = useState('');
@@ -34,12 +34,33 @@ export default function RecipeEdit() {
       setDescription(recipeToEdit.description || '');
       setCategory(recipeToEdit.category || 'Almoço');
       setImg(recipeToEdit.img || '');
-      setPrepareTime(recipeToEdit.prepareTime || '');
-      setServings(recipeToEdit.servings || '');
 
-      setIngredients(recipeToEdit.ingredients ? recipeToEdit.ingredients.join(', ') : '');
-      setInstructions(recipeToEdit.instructions ? recipeToEdit.instructions.join('.\n') : '');
-      setRestrictions(recipeToEdit.restrictions ? recipeToEdit.restrictions.join(', ') : '');
+      // Extrai apenas os números para preencher os campos <input type="number">
+      const rawPrep = recipeToEdit.prepTime
+        ? String(recipeToEdit.prepTime).replace(/\D/g, '')
+        : '';
+      const rawServings = recipeToEdit.servings
+        ? String(recipeToEdit.servings).replace(/\D/g, '')
+        : '';
+
+      setPrepTime(rawPrep);
+      setServings(rawServings);
+
+      setIngredients(
+        Array.isArray(recipeToEdit.ingredients)
+          ? recipeToEdit.ingredients.join(', ')
+          : recipeToEdit.ingredients || ''
+      );
+      setInstructions(
+        Array.isArray(recipeToEdit.instructions)
+          ? recipeToEdit.instructions.join('\n')
+          : recipeToEdit.instructions || ''
+      );
+      setRestrictions(
+        Array.isArray(recipeToEdit.restrictions)
+          ? recipeToEdit.restrictions.join(', ')
+          : recipeToEdit.restrictions || ''
+      );
 
       setIsPublic(!!recipeToEdit.isPublic);
       setIsVegetarian(!!recipeToEdit.isVegetarian);
@@ -49,18 +70,29 @@ export default function RecipeEdit() {
     }
   }, [recipeToEdit]);
 
-  if (!recipeToEdit) {
+  if (loading) {
     return (
-      <div>
-        <h2>Receita não encontrada!</h2>
-        <Link to="/explorer">← Voltar para o Cardápio</Link>
+      <div className="recipe-form-container">
+        <p style={{ textAlign: 'center', padding: '40px 0' }}>Carregando dados da receita...</p>
       </div>
     );
   }
-  const handleSubmit = (e) => {
+
+  if (!recipeToEdit) {
+    return (
+      <div className="recipe-form-container" style={{ textAlign: 'center', padding: '40px 0' }}>
+        <h2>Receita não encontrada!</h2>
+        <Link to="/my-recipes" style={{ color: 'var(--primary-color, #ff6b6b)' }}>
+          ← Voltar para Minhas Receitas
+        </Link>
+      </div>
+    );
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!title.trim() || !prepareTime || !servings || !ingredients.trim() || !instructions.trim()) {
+    if (!title.trim() || !prepTime || !servings || !ingredients.trim() || !instructions.trim()) {
       alert('Por favor, preencha todos os campos obrigatórios (*).');
       return;
     }
@@ -81,13 +113,12 @@ export default function RecipeEdit() {
       .filter(Boolean);
 
     const updatedRecipe = {
-      ...recipeToEdit,
       title,
       description,
       category,
       img: img.trim() || 'https://via.placeholder.com/300x200?text=Sem+Imagem',
-      prepareTime: Number(prepareTime),
-      servings: Number(servings),
+      prepTime: `${prepTime} min`,
+      servings: `${servings} porções`,
       ingredients: ingredientsArray,
       instructions: instructionsArray,
       restrictions: restrictionsArray,
@@ -95,13 +126,18 @@ export default function RecipeEdit() {
       isVegetarian,
       isVegan,
       isLactoseFree,
-      isGlutenFree
+      isGlutenFree,
     };
 
-    updateRecipe(updatedRecipe);
-    navigate('/my-recipes');
-  };
+    const result = await updateRecipe(id, updatedRecipe);
 
+    if (result?.success || result) {
+      alert('Receita atualizada com sucesso!');
+      navigate('/my-recipes');
+    } else {
+      alert(result?.message || 'Erro ao atualizar a receita.');
+    }
+  };
 
   return (
     <div className="recipe-form-container">
@@ -134,13 +170,20 @@ export default function RecipeEdit() {
         {/* Categoria e Imagem */}
         <div className="form-row">
           <div className="form-group-flex">
-            <label className="form-label">Categoria</label>
-            <textarea
+            <label className="form-label">Categoria *</label>
+            <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="form-category"
+              className="form-input"
+              required
             >
-            </textarea>
+              <option value="Entrada">Entrada</option>
+              <option value="Almoço">Almoço</option>
+              <option value="Jantar">Jantar</option>
+              <option value="Sobremesa">Sobremesa</option>
+              <option value="Lanche">Lanche</option>
+              <option value="Bebidas">Bebidas</option>
+            </select>
           </div>
 
           <div className="form-group-flex">
@@ -160,8 +203,8 @@ export default function RecipeEdit() {
             <label className="form-label">Tempo de Preparo (min) *</label>
             <input
               type="number"
-              value={prepareTime}
-              onChange={(e) => setPrepareTime(e.target.value)}
+              value={prepTime}
+              onChange={(e) => setPrepTime(e.target.value)}
               min="1"
               required
               className="form-input"

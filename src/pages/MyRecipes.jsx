@@ -1,4 +1,3 @@
-// src/pages/MyRecipes.jsx
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -25,6 +24,8 @@ export default function MyRecipes() {
   const [sortBy, setSortBy] = useState('title-asc');
   const [onlyFavorites, setOnlyFavorites] = useState(false);
 
+  const currentUserId = user?._id || user?.id;
+
   // Extrai dinamicamente as categorias únicas das receitas
   const categoriesList = useMemo(() => {
     const categoriesSet = new Set(
@@ -34,40 +35,50 @@ export default function MyRecipes() {
   }, [recipes]);
 
   // Filtra receitas criadas pelo usuário ou favoritadas por ele
-  const rawCollection = recipes.filter((recipe) => {
-    const isMine = recipe.userId === user?.id;
-    const isFav = favorites.includes(recipe.id);
-    return isMine || isFav;
-  });
+  const rawCollection = useMemo(() => {
+    return recipes.filter((recipe) => {
+      const recId = recipe._id || recipe.id;
+      const authorId = recipe.userId || recipe.author?._id || recipe.author;
+      
+      const isMine = Boolean(currentUserId && authorId && String(currentUserId) === String(authorId));
+      const isFav = favorites.includes(recId);
 
-  const myCollection = Array.from(
-    new Map(rawCollection.map((recipe) => [recipe.id, recipe])).values()
-  );
+      return isMine || isFav;
+    });
+  }, [recipes, favorites, currentUserId]);
+
+  const myCollection = useMemo(() => {
+    return Array.from(
+      new Map(rawCollection.map((recipe) => [recipe._id || recipe.id, recipe])).values()
+    );
+  }, [rawCollection]);
 
   // Anexa dinamicamente as notas calculadas do RatingsContext
   const recipesWithRatings = useMemo(() => {
     return myCollection.map((recipe) => {
-      const { rating, ratingCount } = getRecipeRating(recipe.id);
+      const recId = recipe._id || recipe.id;
+      const { rating, ratingCount } = getRecipeRating(recId);
       return { ...recipe, rating, ratingCount };
     });
   }, [myCollection, getRecipeRating]);
 
   // Aplicar filtros de busca
   const filteredRecipes = recipesWithRatings.filter((recipe) => {
+    const recId = recipe._id || recipe.id;
     const term = searchTerm.toLowerCase().trim();
     const matchTitle = recipe.title?.toLowerCase().includes(term);
     const matchDescription = recipe.description?.toLowerCase().includes(term);
-    const matchIngredients = recipe.ingredients?.some((ing) =>
+    const matchIngredients = Array.isArray(recipe.ingredients) && recipe.ingredients.some((ing) =>
       ing.toLowerCase().includes(term)
     );
-    const matchRestrictions = recipe.restrictions?.some((res) =>
+    const matchRestrictions = Array.isArray(recipe.restrictions) && recipe.restrictions.some((res) =>
       res.toLowerCase().includes(term)
     );
     const matchesSearch =
       !term || matchTitle || matchDescription || matchIngredients || matchRestrictions;
 
     const matchesCategory = category === 'Todas' || recipe.category === category;
-    const isFav = favorites.includes(recipe.id);
+    const isFav = favorites.includes(recId);
     const matchesOnlyFavorites = !onlyFavorites || isFav;
     const matchesVegetarian = !isVegetarian || recipe.isVegetarian;
     const matchesVegan = !isVegan || recipe.isVegan;
@@ -89,9 +100,9 @@ export default function MyRecipes() {
   const sortedRecipes = [...filteredRecipes].sort((a, b) => {
     switch (sortBy) {
       case 'title-asc':
-        return a.title.localeCompare(b.title);
+        return (a.title || '').localeCompare(b.title || '');
       case 'title-desc':
-        return b.title.localeCompare(a.title);
+        return (b.title || '').localeCompare(a.title || '');
       case 'rating-desc':
         return (b.rating || 0) - (a.rating || 0);
       case 'rating-asc':
@@ -105,9 +116,12 @@ export default function MyRecipes() {
     }
   });
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir esta receita?')) {
-      deleteRecipe(id);
+      const result = await deleteRecipe(id);
+      if (!result?.success && result?.message) {
+        alert(result.message);
+      }
     }
   };
 
@@ -217,15 +231,18 @@ export default function MyRecipes() {
       ) : (
         <div className="recipes-grid">
           {sortedRecipes.map((recipe) => {
-            const isMine = recipe.userId === user?.id;
-            const isFav = favorites.includes(recipe.id);
-            const authorName = getUserName ? getUserName(recipe.userId) : 'Autor';
+            const recipeId = recipe._id || recipe.id;
+            const authorId = recipe.userId || recipe.author?._id || recipe.author;
+            
+            const isMine = Boolean(currentUserId && authorId && String(currentUserId) === String(authorId));
+            const isFav = favorites.includes(recipeId);
+            const authorName = recipe.author?.name || (getUserName ? getUserName(authorId) : 'Autor');
 
-            const servingsText = recipe.servings > 1 ? 'porções' : 'porção';
+            const prepTimeDisplay = recipe.prepTime || recipe.prepareTime || 'N/A';
 
             return (
               <div
-                key={recipe.id}
+                key={recipeId}
                 className={`recipe-card ${isMine ? 'own-recipe' : 'third-party-recipe'}`}
               >
                 {/* Imagem + Overlay do Favorito */}
@@ -236,7 +253,7 @@ export default function MyRecipes() {
                     className="recipe-card-image"
                   />
                   <button
-                    onClick={() => toggleFavorite(recipe.id)}
+                    onClick={() => toggleFavorite(recipeId)}
                     className="favorite-btn-overlay"
                     title={isFav ? 'Remover dos Favoritos' : 'Favoritar'}
                   >
@@ -259,8 +276,8 @@ export default function MyRecipes() {
                     {/* Linha 2: Tempo/Porções (Esq) e Nome do Autor (Dir) */}
                     <div className="recipe-card-meta">
                       <div className="meta-info">
-                        <span>⏱️ {recipe.prepareTime || 0} min</span>
-                        <span>🍽️ {recipe.servings || 1} {servingsText}</span>
+                        <span>⏱️ {prepTimeDisplay}</span>
+                        <span>🍽️ {recipe.servings || '1 porção'}</span>
                       </div>
                       <span className="meta-author" title={authorName}>
                         👤 {authorName}
@@ -272,21 +289,21 @@ export default function MyRecipes() {
                   <div className="recipe-card-actions">
                     {isMine ? (
                       <>
-                        <Link to={`/recipe/${recipe.id}`} className="btn-view">
+                        <Link to={`/recipes/${recipeId}`} className="btn-view">
                           Ver
                         </Link>
-                        <Link to={`/recipe/${recipe.id}/edit`} className="btn-edit">
+                        <Link to={`/recipes/edit/${recipeId}`} className="btn-edit">
                           Editar
                         </Link>
                         <button
-                          onClick={() => handleDelete(recipe.id)}
+                          onClick={() => handleDelete(recipeId)}
                           className="btn-delete"
                         >
                           Excluir
                         </button>
                       </>
                     ) : (
-                      <Link to={`/recipe/${recipe.id}`} className="btn-view">
+                      <Link to={`/recipes/${recipeId}`} className="btn-view">
                         Ver Detalhes
                       </Link>
                     )}

@@ -1,4 +1,3 @@
-// RecipeDetails
 import { useParams, Link, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../hooks/useAuth';
@@ -13,47 +12,75 @@ import '../styles/index.css';
 export default function RecipeDetails() {
   const { id } = useParams();
   const { user } = useAuth();
-  const { getRecipeById } = useRecipes();
+  const { getRecipeById, deleteRecipe } = useRecipes();
   const navigate = useNavigate();
 
   const { getRecipeRating, submitRating } = useRatings();
   const { favorites, toggleFavorite } = useFavorites();
 
   const recipe = getRecipeById(id);
+
   if (!recipe) {
     return (
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
         <h2>Receita não encontrada!</h2>
-        <Link to="/explorer"className="link-back-explorer">← Voltar para o Cardápio</Link>
+        <Link to="/explorer" className="link-back-explorer">← Voltar para o Cardápio</Link>
       </div>
     );
   }
 
-  const isOwner = user && user.id === recipe.userId;
-  const isFav = favorites.includes(recipe.id);
+  // Identificadores (compatível com Mongo _id e com id antigo)
+  const recipeId = recipe._id || recipe.id;
+  const currentUserId = user?._id || user?.id;
+  const authorId = recipe.userId || recipe.author?._id || recipe.author;
 
-  const { rating, ratingCount, userRating, hasRated } = getRecipeRating(recipe.id, user?.id);
+  // Verifica se o utilizador logado é o proprietário
+  const isOwner = Boolean(currentUserId && authorId && String(currentUserId) === String(authorId));
+  const isFav = favorites.includes(recipeId);
+
+  const { rating, ratingCount, userRating, hasRated } = getRecipeRating(recipeId, currentUserId);
 
   const handleRate = (stars) => {
-    if (user?.id) {
-      submitRating(recipe.id, user.id, stars);
+    if (currentUserId) {
+      submitRating(recipeId, currentUserId, stars);
     } else {
       alert("Você precisa estar logado para avaliar!");
     }
   };
 
+  const handleDelete = async () => {
+    const confirmed = window.confirm("Tem a certeza que deseja eliminar esta receita?");
+    if (!confirmed) return;
+
+    const result = await deleteRecipe(recipeId);
+    if (result?.success || result) {
+      alert("Receita eliminada com sucesso!");
+      navigate('/my-recipes');
+    } else {
+      alert(result?.message || "Erro ao eliminar a receita.");
+    }
+  };
+
+  // Garante a extração do tempo de preparo independentemente do nome do atributo
+  const displayPrepTime = recipe.prepTime || recipe.prepareTime || 'N/A';
+
   return (
     <div className="recipe-details-container">
-      {/* Barra de Topo: Voltar à esquerda e Editar Receita à direita */}
+      {/* Barra de Topo: Voltar à esquerda e Ações do Proprietário à direita */}
       <div className="recipe-details-top-bar">
         <button onClick={() => navigate(-1)} className="btn-back">
           Voltar
         </button>
 
         {isOwner && (
-          <Link to={`/recipe/${recipe.id}/edit`} className="btn-edit-recipe">
-            Editar Receita
-          </Link>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <Link to={`/recipes/edit/${recipeId}`} className="btn-edit-recipe">
+              Editar Receita
+            </Link>
+            <button onClick={handleDelete} className="btn-delete-recipe">
+              Eliminar
+            </button>
+          </div>
         )}
       </div>
 
@@ -61,7 +88,7 @@ export default function RecipeDetails() {
       <div className="recipe-details-image-wrapper">
         {user && (
           <button
-            onClick={() => toggleFavorite(recipe.id)}
+            onClick={() => toggleFavorite(recipeId)}
             className="favorite-btn-overlay-details"
             title={isFav ? "Remover dos favoritos" : "Adicionar aos favoritos"}
           >
@@ -91,12 +118,12 @@ export default function RecipeDetails() {
       <div className="recipe-meta-box">
         <div className="recipe-meta-item">
           <span className="meta-label">Tempo de Preparo</span>
-          <strong className="meta-value">⏱️ {recipe.prepareTime} minutos</strong>
+          <strong className="meta-value">⏱️ {displayPrepTime}</strong>
         </div>
         <div className="recipe-meta-item">
           <span className="meta-label">Rendimento</span>
           <strong className="meta-value">
-            🍽️ {recipe.servings} {recipe.servings === 1 ? 'porção' : 'porções'}
+            🍽️ {recipe.servings}
           </strong>
         </div>
         <div className="recipe-meta-item">
@@ -123,6 +150,7 @@ export default function RecipeDetails() {
         )}
 
         {recipe.restrictions &&
+          Array.isArray(recipe.restrictions) &&
           recipe.restrictions.map((tag, index) => (
             <span key={index} className="tag-badge tag-custom">
               🏷️ {tag}
@@ -137,9 +165,12 @@ export default function RecipeDetails() {
         <h3 className="recipe-section-title">Ingredientes</h3>
         {recipe.ingredients && recipe.ingredients.length > 0 ? (
           <ul className="recipe-list">
-            {recipe.ingredients.map((ingredient, index) => (
-              <li key={index} className="recipe-list-item">{ingredient}</li>
-            ))}
+            {Array.isArray(recipe.ingredients)
+              ? recipe.ingredients.map((ingredient, index) => (
+                  <li key={index} className="recipe-list-item">{ingredient}</li>
+                ))
+              : <li className="recipe-list-item">{recipe.ingredients}</li>
+            }
           </ul>
         ) : (
           <p className="empty-text">Nenhum ingrediente informado.</p>
@@ -151,9 +182,12 @@ export default function RecipeDetails() {
         <h3 className="recipe-section-title">Modo de Preparo</h3>
         {recipe.instructions && recipe.instructions.length > 0 ? (
           <ol className="recipe-list">
-            {recipe.instructions.map((step, index) => (
-              <li key={index} className="recipe-list-item">{step}</li>
-            ))}
+            {Array.isArray(recipe.instructions)
+              ? recipe.instructions.map((step, index) => (
+                  <li key={index} className="recipe-list-item">{step}</li>
+                ))
+              : <li className="recipe-list-item">{recipe.instructions}</li>
+            }
           </ol>
         ) : (
           <p className="empty-text">Nenhuma instrução informada.</p>
@@ -183,7 +217,7 @@ export default function RecipeDetails() {
             </p>
           )}
 
-          <RecipeComments recipeId={recipe.id} />
+          <RecipeComments recipeId={recipeId} />
         </section>
       )}
     </div>

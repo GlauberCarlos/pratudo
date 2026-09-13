@@ -1,75 +1,92 @@
 // RecipesContext
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useState, useEffect, useContext } from 'react';
+import api from '../services/api';
 
 const RecipesContext = createContext();
 
-const STORAGE_KEY = '@my-menu:recipes';
+export const RecipesProvider = ({ children }) => {
+  const [recipes, setRecipes] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-export function RecipesProvider({ children }) {
-  const [recipes, setRecipes] = useState(() => {
+  const fetchPublicRecipes = async (params = {}) => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
+      setLoading(true);
+      const response = await api.get('/recipes', { params });
+      setRecipes(response.data);
     } catch (error) {
-      console.error('Erro ao carregar receitas do localStorage:', error);
-      return [];
+      console.error('Erro ao carregar receitas públicas:', error);
+    } finally {
+      setLoading(false);
     }
-  });
+  };
+
+  const getRecipeById = (id) => {
+    if (!id) return null;
+    return recipes.find((recipe) =>
+      String(recipe._id) === String(id) || String(recipe.id) === String(id)
+    );
+  };
+
+  const addRecipe = async (recipeData) => {
+    try {
+      const response = await api.post('/recipes', recipeData);
+      setRecipes((prev) => [response.data.recipe, ...prev]);
+      return { success: true, recipe: response.data.recipe };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Erro ao criar receita.',
+      };
+    }
+  };
+
+  const updateRecipe = async (id, updatedData) => {
+    try {
+      const response = await api.put(`/recipes/${id}`, updatedData);
+      setRecipes((prev) =>
+        prev.map((r) => (r._id === id ? response.data.recipe || response.data : r))
+      );
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Erro ao atualizar receita.',
+      };
+    }
+  };
+
+  const deleteRecipe = async (id) => {
+    try {
+      await api.delete(`/recipes/${id}`);
+      setRecipes((prev) => prev.filter((r) => r._id !== id));
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Erro ao excluir receita.',
+      };
+    }
+  };
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes));
-    } catch (error) {
-      console.error('Erro ao salvar receitas no localStorage:', error);
-    }
-  }, [recipes]);
-
-  const addRecipe = useCallback((newRecipe) => {
-    const recipeWithId = {
-      ...newRecipe,
-      id: newRecipe.id || Date.now(),
-      createdAt: new Date().toISOString()
-    };
-    setRecipes((prev) => [recipeWithId, ...prev]);
-    return recipeWithId;
+    fetchPublicRecipes();
   }, []);
-
-  const updateRecipe = useCallback((updatedRecipe) => {
-    setRecipes((prev) =>
-      prev.map((r) => (String(r.id) === String(updatedRecipe.id) ? updatedRecipe : r))
-    );
-  }, []);
-
-  const deleteRecipe = useCallback((recipeId) => {
-    setRecipes((prev) => prev.filter((r) => String(r.id) !== String(recipeId)));
-  }, []);
-
-  const getRecipeById = useCallback(
-    (recipeId) => {
-      return recipes.find((r) => String(r.id) === String(recipeId));
-    },
-    [recipes]
-  );
 
   return (
     <RecipesContext.Provider
       value={{
         recipes,
+        loading,
+        fetchPublicRecipes,
+        getRecipeById,
         addRecipe,
         updateRecipe,
         deleteRecipe,
-        getRecipeById
       }}
     >
       {children}
     </RecipesContext.Provider>
   );
-}
+};
 
-export function useRecipes() {
-  const context = useContext(RecipesContext);
-  if (!context) {
-    throw new Error('useRecipes deve ser usado dentro de um RecipesProvider');
-  }
-  return context;
-}
+export const useRecipes = () => useContext(RecipesContext);

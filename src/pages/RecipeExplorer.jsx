@@ -11,10 +11,10 @@ import '../styles/RecipeList.css';
 import '../styles/index.css';
 
 export default function RecipeExplorer() {
-  const { user, getUserName } = useAuth();
+  const { user } = useAuth();
   const { favorites, toggleFavorite } = useFavorites();
   const { getRecipeRating } = useRatings();
-  const { recipes } = useRecipes();
+  const { recipes, loading } = useRecipes();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('Todas');
@@ -26,28 +26,25 @@ export default function RecipeExplorer() {
 
   // Extrai dinamicamente as categorias únicas das receitas
   const categoriesList = useMemo(() => {
-    const categoriesSet = new Set(
-      recipes.map((r) => r.category).filter(Boolean)
-    );
+    const categoriesSet = new Set(recipes.map((r) => r.category).filter(Boolean));
     return Array.from(categoriesSet);
   }, [recipes]);
 
-  const publicRecipes = recipes.filter(
-    (recipe) => recipe.isPublic && String(recipe.userId) !== String(user?.id)
-  );
+  const publicRecipes = useMemo(() => {
+    return recipes.filter((recipe) => {
+      const authorId = recipe.author?._id || recipe.author;
+      return recipe.isPublic && String(authorId) !== String(user?.id);
+    });
+  }, [recipes, user]);
 
   const recipesWithRatings = useMemo(() => {
     return publicRecipes.map((recipe) => {
-      const { rating, ratingCount } = getRecipeRating(recipe.id);
+      const { rating, ratingCount } = getRecipeRating ? getRecipeRating(recipe._id) : { rating: 0, ratingCount: 0 };
       return { ...recipe, rating, ratingCount };
     });
   }, [publicRecipes, getRecipeRating]);
 
   const filteredRecipes = recipesWithRatings.filter((recipe) => {
-    if (user?.id && recipe.userId === user.id) {
-      return false;
-    }
-
     const term = searchTerm.toLowerCase().trim();
     const matchTitle = recipe.title?.toLowerCase().includes(term);
     const matchDescription = recipe.description?.toLowerCase().includes(term);
@@ -81,14 +78,18 @@ export default function RecipeExplorer() {
         return (b.rating || 0) - (a.rating || 0);
       case 'rating-asc':
         return (a.rating || 0) - (b.rating || 0);
-      case 'ratingCount-desc':
-        return (b.ratingCount || 0) - (a.ratingCount || 0);
-      case 'ratingCount-asc':
-        return (a.ratingCount || 0) - (b.ratingCount || 0);
       default:
         return 0;
     }
   });
+
+  if (loading) {
+    return (
+      <div className="recipes-page-container main-container">
+        <p style={{ textAlign: 'center', padding: '40px 0' }}>Carregando receitas...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="recipes-page-container main-container">
@@ -96,10 +97,8 @@ export default function RecipeExplorer() {
         <h2 className="recipes-page-title">Explorar Receitas da Comunidade</h2>
       </div>
 
-      {/* PAINEL DE FILTROS EM 3 LINHAS */}
+      {/* Painel de Filtros */}
       <div className="recipes-filter-panel">
-
-        {/* LINHA 1: Buscar, Categoria e Ordenar */}
         <div className="filter-row-1">
           <input
             type="text"
@@ -113,7 +112,7 @@ export default function RecipeExplorer() {
             onChange={(e) => setCategory(e.target.value)}
             className="filter-select"
           >
-            <option value="Todas">Todas as Categorias</option>
+            <option value="Todas">Todas as Dificuldades</option>
             {categoriesList.map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
@@ -130,12 +129,9 @@ export default function RecipeExplorer() {
             <option value="title-desc">Título (Z-A)</option>
             <option value="rating-desc">Maior Avaliação</option>
             <option value="rating-asc">Menor Avaliação</option>
-            <option value="ratingCount-desc">Mais Avaliações</option>
-            <option value="ratingCount-asc">Menos Avaliações</option>
           </select>
         </div>
 
-        {/* LINHA 3: Restrições */}
         <div className="filter-row-3">
           <label className="checkbox-label">
             <input
@@ -170,10 +166,9 @@ export default function RecipeExplorer() {
             🌾 Sem Glúten
           </label>
         </div>
-
       </div>
 
-      {/* GRADE DE CARDS */}
+      {/* Grade de Receitas */}
       {sortedRecipes.length === 0 ? (
         <p style={{ color: '#5D5D5D', textAlign: 'center', padding: '40px 0' }}>
           Nenhuma receita encontrada com os filtros selecionados.
@@ -181,39 +176,37 @@ export default function RecipeExplorer() {
       ) : (
         <div className="recipes-grid">
           {sortedRecipes.map((recipe) => {
-            const isMine = recipe.userId === user?.id;
-            const isFav = favorites.includes(recipe.id);
-            const authorName = getUserName ? getUserName(recipe.userId) : 'Autor';
-
-            const servingsText = recipe.servings > 1 ? 'porções' : 'porção';
+            const authorId = recipe.author?._id || recipe.author;
+            const isMine = String(authorId) === String(user?.id);
+            const isFav = favorites?.includes(recipe._id);
+            const authorName = recipe.author?.name
+              ? `${recipe.author.name} ${recipe.author.lastName || ''}`
+              : 'Autor Comunitário';
 
             return (
               <div
-                key={recipe.id}
+                key={recipe._id}
                 className={`recipe-card ${isMine ? 'own-recipe' : 'third-party-recipe'}`}
               >
-                {/* Imagem + Overlay do Favorito */}
                 <div className="recipe-card-image-wrapper">
                   <img
-                    src={recipe.img || 'https://via.placeholder.com/300x150'}
+                    src={recipe.img || 'https://via.placeholder.com/300x150?text=Sem+Imagem'}
                     alt={recipe.title}
                     className="recipe-card-image"
                   />
-                  {user && (
-                  <button
-                    onClick={() => toggleFavorite(recipe.id)}
-                    className="favorite-btn-overlay"
-                    title={isFav ? 'Remover dos Favoritos' : 'Favoritar'}
-                  >
-                    {isFav ? '❤️' : '🤍'}
-                  </button>
+                  {user && toggleFavorite && (
+                    <button
+                      onClick={() => toggleFavorite(recipe._id)}
+                      className="favorite-btn-overlay"
+                      title={isFav ? 'Remover dos Favoritos' : 'Favoritar'}
+                    >
+                      {isFav ? '❤️' : '🤍'}
+                    </button>
                   )}
                 </div>
 
-                {/* Conteúdo */}
                 <div className="recipe-card-content">
                   <div>
-                    {/* Linha 1: Título (Esq) e Avaliação (Dir) */}
                     <div className="recipe-card-header">
                       <h3 className="recipe-card-title">{recipe.title}</h3>
                       <span className="recipe-card-rating">
@@ -222,11 +215,10 @@ export default function RecipeExplorer() {
                       </span>
                     </div>
 
-                    {/* Linha 2: Tempo/Porções (Esq) e Nome do Autor (Dir) */}
                     <div className="recipe-card-meta">
                       <div className="meta-info">
-                        <span>⏱️ {recipe.prepareTime || 0} min</span>
-                        <span>🍽️ {recipe.servings || 1} {servingsText}</span>
+                        <span>⏱️ {recipe.prepTime || 'N/A'}</span>
+                        <span>🍽️ {recipe.servings || '1 porção'}</span>
                       </div>
                       <span className="meta-author" title={authorName}>
                         👤 {authorName}
@@ -234,9 +226,8 @@ export default function RecipeExplorer() {
                     </div>
                   </div>
 
-                  {/* Linha 3: Botões de Ação */}
                   <div className="recipe-card-actions">
-                    <Link to={`/recipe/${recipe.id}`} className="btn-view">
+                    <Link to={`/recipe/${recipe._id}`} className="btn-view">
                       Ver Detalhes
                     </Link>
                   </div>
