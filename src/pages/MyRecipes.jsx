@@ -289,10 +289,10 @@ export default function MyRecipes() {
                   <div className="recipe-card-actions">
                     {isMine ? (
                       <>
-                        <Link to={`/recipes/${recipeId}`} className="btn-view">
+                        <Link to={`/recipe/${recipeId}`} className="btn-view">
                           Ver
                         </Link>
-                        <Link to={`/recipes/edit/${recipeId}`} className="btn-edit">
+                        <Link to={`/recipe/edit/${recipeId}`} className="btn-edit">
                           Editar
                         </Link>
                         <button
@@ -303,7 +303,7 @@ export default function MyRecipes() {
                         </button>
                       </>
                     ) : (
-                      <Link to={`/recipes/${recipeId}`} className="btn-view">
+                      <Link to={`/recipe/${recipeId}`} className="btn-view">
                         Ver Detalhes
                       </Link>
                     )}

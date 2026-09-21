@@ -1,6 +1,6 @@
 // RecipeExplorer
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 import { useAuth } from '../hooks/useAuth';
 import { useFavorites } from '../context/FavoritesContext';
@@ -16,13 +16,28 @@ export default function RecipeExplorer() {
   const { getRecipeRating } = useRatings();
   const { recipes, loading } = useRecipes();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [category, setCategory] = useState('Todas');
-  const [isVegetarian, setIsVegetarian] = useState(false);
-  const [isVegan, setIsVegan] = useState(false);
-  const [isLactoseFree, setIsLactoseFree] = useState(false);
-  const [isGlutenFree, setIsGlutenFree] = useState(false);
   const [sortBy, setSortBy] = useState('title-asc');
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const searchTerm = searchParams.get('searchTerm') || "";
+  const category = searchParams.get('category') || "Todas";
+  const isVegetarian = searchParams.get('isVegetarian') === 'true';
+  const isVegan = searchParams.get('isVegan') === 'true';
+  const isLactoseFree = searchParams.get('isLactoseFree') === 'true';
+  const isGlutenFree = searchParams.get('isGlutenFree') === 'true';
+
+  const handleFilterChange = (key, value) => {
+    const newParams = new URLSearchParams(searchParams);
+
+    if (value && value !== 'Todas' && value !== false) {
+      newParams.set(key, value);
+    } else {
+      newParams.delete(key);
+    }
+
+    setSearchParams(newParams, { replace: true });
+  };
 
   // Extrai dinamicamente as categorias únicas das receitas
   const categoriesList = useMemo(() => {
@@ -104,12 +119,12 @@ export default function RecipeExplorer() {
             type="text"
             placeholder="Buscar por título, ingrediente ou restrição..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
             className="filter-input-search"
           />
           <select
             value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            onChange={(e) => handleFilterChange('category',e.target.value)}
             className="filter-select"
           >
             <option value="Todas">Todas as Dificuldades</option>
@@ -137,7 +152,7 @@ export default function RecipeExplorer() {
             <input
               type="checkbox"
               checked={isVegetarian}
-              onChange={(e) => setIsVegetarian(e.target.checked)}
+              onChange={(e) => handleFilterChange('isVegetarian', e.target.checked)}
             />
             🌱 Vegetariano
           </label>
@@ -145,7 +160,7 @@ export default function RecipeExplorer() {
             <input
               type="checkbox"
               checked={isVegan}
-              onChange={(e) => setIsVegan(e.target.checked)}
+              onChange={(e) => handleFilterChange('isVegan', e.target.checked)}
             />
             🌿 Vegano
           </label>
@@ -153,7 +168,7 @@ export default function RecipeExplorer() {
             <input
               type="checkbox"
               checked={isLactoseFree}
-              onChange={(e) => setIsLactoseFree(e.target.checked)}
+              onChange={(e) => handleFilterChange('isLactoseFree', e.target.checked)}
             />
             🥛 Sem Lactose
           </label>
@@ -161,7 +176,7 @@ export default function RecipeExplorer() {
             <input
               type="checkbox"
               checked={isGlutenFree}
-              onChange={(e) => setIsGlutenFree(e.target.checked)}
+              onChange={(e) => handleFilterChange('isGlutenFree', e.target.checked)}
             />
             🌾 Sem Glúten
           </label>

@@ -1,48 +1,88 @@
 // CommentsContext
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
+import api from '../services/api';
 
 const CommentsContext = createContext();
 
-const STORAGE_KEY = 'mymenu_comments';
-
 export function CommentsProvider({ children }) {
-  const [comments, setComments] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(comments));
-  }, [comments]);
+  const fetchRecipeComments = useCallback(async (recipeId) => {
+    if (!recipeId) return;
 
-  // Adiciona um novo comentário
-  const addComment = (recipeId, userId, userName, text) => {
-    if (!text || !text.trim()) return;
+    try {
+      setLoading(true);
+      const response = await api.get(`/comments/recipe/${recipeId}`);
+      setComments(response.data || []);
+    } catch (error) {
+      console.error('Erro ao buscar comentários da receita:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    const newComment = {
-      id: Date.now(),
-      recipeId,
-      userId,
-      userName: userName || 'Usuário Anônimo',
-      text: text.trim(),
-      createdAt: new Date().toISOString()
-    };
+  const addComment = async (recipeId, text) => {
+    if (!text || !text.trim() || !recipeId) return { success: false };
 
-    setComments((prev) => [newComment, ...prev]);
+    try {
+      const response = await api.post('/comments', {
+        recipeId,
+        text: text.trim(),
+      });
+
+      setComments((prev) => [response.data, ...prev]);
+      return { success: true };
+    } catch (error) {
+      console.error('Erro ao adicionar comentário:', error);
+      alert(error.response?.data?.message || 'Erro ao publicar comentário.');
+      return { success: false };
+    }
   };
 
-  // Remove um comentário pelo ID (somente se for o dono ou admin)
-  const deleteComment = (commentId) => {
-    setComments((prev) => prev.filter((item) => item.id !== commentId));
+  const editComment = async (commentId, newText) => {
+    if (!newText || !newText.trim() || !commentId) return { success: false };
+
+    try {
+      const response = await api.put(`/comments/${commentId}`, {
+        text: newText.trim(),
+      });
+      setComments((prev) =>
+        prev.map((item) =>
+          (item._id || item.id) === commentId ? response.data : item
+        )
+      );
+      return { success: true };
+    } catch (error) {
+      console.error('Erro ao editar comentário:', error);
+      alert(error.response?.data?.message || 'Erro ao guardar alterações do comentário.');
+      return { success: false };
+    }
   };
 
-  // Retorna todos os comentários referentes a uma receita específica
-  const getRecipeComments = (recipeId) => {
-    return comments.filter((item) => String(item.recipeId) === String(recipeId));
+  const deleteComment = async (commentId) => {
+    try {
+      await api.delete(`/comments/${commentId}`);
+      setComments((prev) => prev.filter((item) => (item._id || item.id) !== commentId));
+      return { success: true };
+    } catch (error) {
+      console.error('Erro ao remover comentário:', error);
+      alert('Erro ao excluir comentário.');
+      return { success: false };
+    }
   };
 
   return (
-    <CommentsContext.Provider value={{ comments, addComment, deleteComment, getRecipeComments }}>
+    <CommentsContext.Provider
+      value={{
+        comments,
+        loading,
+        fetchRecipeComments,
+        addComment,
+        editComment,
+        deleteComment,
+      }}
+    >
       {children}
     </CommentsContext.Provider>
   );

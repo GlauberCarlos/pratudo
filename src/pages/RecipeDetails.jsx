@@ -74,7 +74,7 @@ export default function RecipeDetails() {
 
         {isOwner && (
           <div style={{ display: 'flex', gap: '10px' }}>
-            <Link to={`/recipes/edit/${recipeId}`} className="btn-edit-recipe">
+            <Link to={`/recipe/edit/${recipeId}`} className="btn-edit-recipe">
               Editar Receita
             </Link>
             <button onClick={handleDelete} className="btn-delete-recipe">

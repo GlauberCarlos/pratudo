@@ -76,7 +76,12 @@ export default function RecipeNew() {
 
   return (
     <div className="recipe-form-container">
-      <h2 className="recipe-form-title">Nova Receita</h2>
+      <div className="recipe-details-top-bar">
+        <h2 className="recipe-form-title">Nova Receita</h2>
+        <button onClick={() => navigate(-1)} className="btn-back">
+          Voltar
+        </button>
+      </div>
 
       <form onSubmit={handleSubmit} className="recipe-form">
         <div className="form-group">

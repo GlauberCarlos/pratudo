@@ -1,9 +1,10 @@
 // RecipeWeek
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useRecipes } from '../context/RecipesContext';
 import { useFavorites } from '../context/FavoritesContext';
+import api from '../services/api';
 
 import '../styles/RecipeWeek.css';
 import '../styles/index.css';
@@ -24,10 +25,18 @@ export default function RecipeWeek() {
   const { favorites } = useFavorites();
   const navigate = useNavigate();
 
+  const currentUserId = user?._id || user?.id;
+
   // 1. Coleção de receitas do usuário (Minhas + Favoritadas)
-  const myCollection = recipes.filter(
-    (recipe) => recipe.userId === user?.id || favorites.includes(recipe.id)
-  );
+  const myCollection = useMemo(() => {
+    return recipes.filter((recipe) => {
+      const recId = recipe._id || recipe.id;
+      const authorId = recipe.userId || recipe.author?._id || recipe.author;
+      const isMine = Boolean(currentUserId && authorId && String(currentUserId) === String(authorId));
+      const isFav = favorites.includes(recId);
+      return isMine || isFav;
+    });
+  }, [recipes, favorites, currentUserId]);
 
   // 2. Estados dos Filtros do Painel Lateral
   const [selectedDays, setSelectedDays] = useState({
@@ -50,32 +59,54 @@ export default function RecipeWeek() {
   const [weeklyPlan, setWeeklyPlan] = useState({});
 
   // 4. Estado para Controle do Modal de Seleção
-  const [modalDayKey, setModalDayKey] = useState(null); // ex: 'monday'
+  const [modalDayKey, setModalDayKey] = useState(null);
   const [modalSearch, setModalSearch] = useState('');
 
-  // Carregar planejamento salvo no localStorage ao iniciar
+  // Carregar planejamento da API ao iniciar
   useEffect(() => {
-    if (user?.id) {
-      const savedPlan = localStorage.getItem(`@my-menu:weekly-plan:${user.id}`);
-      if (savedPlan) {
-        try {
-          setWeeklyPlan(JSON.parse(savedPlan));
-        } catch (error) {
-          console.error('Erro ao carregar planejamento da semana:', error);
+    async function loadPlan() {
+      if (!currentUserId) return;
+      try {
+        const response = await api.get('/menu');
+        const planData = response.data || {};
+
+        const cleanedPlan = {};
+        Object.keys(planData).forEach((day) => {
+          if (planData[day]) {
+            cleanedPlan[day] = typeof planData[day] === 'object' ? planData[day]._id : planData[day];
+          }
+        });
+
+        setWeeklyPlan(cleanedPlan);
+      } catch (error) {
+        console.error('Erro ao carregar planeamento da API, usando fallback:', error);
+        const savedPlan = localStorage.getItem(`@my-menu:weekly-plan:${currentUserId}`);
+        if (savedPlan) {
+          try {
+            setWeeklyPlan(JSON.parse(savedPlan));
+          } catch (e) {
+            console.error(e);
+          }
         }
       }
     }
-  }, [user]);
 
-  // Salvar planejamento no localStorage sempre que mudar
-  const savePlan = (newPlan) => {
+    loadPlan();
+  }, [currentUserId]);
+
+  const savePlan = async (newPlan) => {
     setWeeklyPlan(newPlan);
-    if (user?.id) {
-      localStorage.setItem(`@my-menu:weekly-plan:${user.id}`, JSON.stringify(newPlan));
+
+    if (currentUserId) {
+      localStorage.setItem(`@my-menu:weekly-plan:${currentUserId}`, JSON.stringify(newPlan));
+      try {
+        await api.put('/menu', { plan: newPlan });
+      } catch (error) {
+        console.error('Erro ao sincronizar planeamento com o servidor:', error);
+      }
     }
   };
 
-  // Funções de Filtragem da Coleção
   const getFilteredCollection = () => {
     return myCollection.filter((recipe) => {
       if (filterVeg && !recipe.isVegetarian) return false;
@@ -83,7 +114,6 @@ export default function RecipeWeek() {
       if (filterLactose && !recipe.isLactoseFree) return false;
       if (filterGluten && !recipe.isGlutenFree) return false;
 
-      // Filtro por restrições em texto (separadas por vírgula)
       if (restrictionsInput.trim()) {
         const requiredRestrictions = restrictionsInput
           .split(',')
@@ -104,7 +134,6 @@ export default function RecipeWeek() {
     });
   };
 
-  // Sorteia uma receita aleatória a partir de uma lista
   const getRandomRecipe = (pool) => {
     if (!pool || pool.length === 0) return null;
     const randomIndex = Math.floor(Math.random() * pool.length);
@@ -126,7 +155,7 @@ export default function RecipeWeek() {
       if (selectedDays[day.key]) {
         const randomRecipe = getRandomRecipe(pool);
         if (randomRecipe) {
-          updatedPlan[day.key] = randomRecipe.id;
+          updatedPlan[day.key] = randomRecipe._id || randomRecipe.id;
         }
       } else {
         delete updatedPlan[day.key];
@@ -152,19 +181,17 @@ export default function RecipeWeek() {
     if (randomRecipe) {
       savePlan({
         ...weeklyPlan,
-        [dayKey]: randomRecipe.id,
+        [dayKey]: randomRecipe._id || randomRecipe.id,
       });
     }
   };
 
-  // Ação: Remover receita do dia
   const handleRemoveFromDay = (dayKey) => {
     const updatedPlan = { ...weeklyPlan };
     delete updatedPlan[dayKey];
     savePlan(updatedPlan);
   };
 
-  // Ação: Selecionar receita manualmente via Modal
   const handleSelectRecipeForDay = (recipeId) => {
     if (modalDayKey) {
       savePlan({
@@ -176,7 +203,6 @@ export default function RecipeWeek() {
     }
   };
 
-  // Alternar checkbox de dia no painel lateral
   const toggleDaySelection = (dayKey) => {
     setSelectedDays((prev) => ({
       ...prev,
@@ -191,7 +217,6 @@ export default function RecipeWeek() {
       <div className="recipe-week-layout">
         {/* PAINEL LATERAL DE CONFIGURAÇÕES */}
         <aside className="recipe-week-sidebar">
-
           <div className="recipe-week-days-box">
             <div className="recipe-week-section-label">
               Escolha os dias da semana
@@ -213,7 +238,7 @@ export default function RecipeWeek() {
 
           <hr className="recipe-week-divider" />
 
-          {/* Filtros de Dieta na Vertical */}
+          {/* Filtros de Dieta */}
           <div className="recipe-week-filters-group">
             <strong className="recipe-week-section-label">Filtros</strong>
 
@@ -286,13 +311,14 @@ export default function RecipeWeek() {
         <main className="recipe-week-grid">
           {DAYS_OF_WEEK.map((day) => {
             const recipeId = weeklyPlan[day.key];
-            const recipe = recipes.find((r) => r.id === recipeId);
+            const recipe = recipes.find(
+              (r) => String(r._id || r.id) === String(recipeId)
+            );
+            const prepTimeDisplay = recipe?.prepTime || recipe?.prepareTime || 'N/A';
 
             return (
               <div key={day.key} className="recipe-week-card">
-                <div className="recipe-week-card-header">
-                  {day.label}
-                </div>
+                <div className="recipe-week-card-header">{day.label}</div>
 
                 <div className="recipe-week-card-content">
                   {recipe ? (
@@ -307,7 +333,7 @@ export default function RecipeWeek() {
                         </div>
                         <h4 className="recipe-week-card-recipe-title">{recipe.title}</h4>
                         <p className="recipe-week-card-recipe-description">{recipe.description}</p>
-                        <span className="recipe-week-card-time">Tempo de preparo: {recipe.prepareTime} min</span>
+                        <span className="recipe-week-card-time">Tempo de preparo: {prepTimeDisplay}</span>
                       </div>
 
                       <div className="recipe-week-card-actions">
@@ -324,7 +350,7 @@ export default function RecipeWeek() {
                           Sortear
                         </button>
                         <button
-                          onClick={() => navigate(`/recipe/${recipe.id}`)}
+                          onClick={() => navigate(`/recipe/${recipe._id || recipe.id}`)}
                           className="card-btn card-btn-view"
                         >
                           Ver
@@ -394,26 +420,31 @@ export default function RecipeWeek() {
             <div className="recipe-week-modal-list">
               {myCollection
                 .filter((r) => r.title.toLowerCase().includes(modalSearch.toLowerCase()))
-                .map((r) => (
-                  <div key={r.id} className="recipe-week-modal-item">
-                    <img
-                      src={r.img || 'https://via.placeholder.com/50'}
-                      alt={r.title}
-                      className="recipe-week-modal-item-img"
-                    />
-                    <div className="recipe-week-modal-item-info">
-                      <strong className="recipe-week-modal-item-title">{r.title}</strong>
-                      <span className="recipe-week-modal-item-time">⏱️ {r.prepareTime} min</span>
+                .map((r) => {
+                  const recId = r._id || r.id;
+                  const timeDisplay = r.prepTime || r.prepareTime || 'N/A';
+
+                  return (
+                    <div key={recId} className="recipe-week-modal-item">
+                      <img
+                        src={r.img || 'https://via.placeholder.com/50'}
+                        alt={r.title}
+                        className="recipe-week-modal-item-img"
+                      />
+                      <div className="recipe-week-modal-item-info">
+                        <strong className="recipe-week-modal-item-title">{r.title}</strong>
+                        <span className="recipe-week-modal-item-time">⏱️ {timeDisplay}</span>
+                      </div>
+                      <button
+                        onClick={() => handleSelectRecipeForDay(recId)}
+                        className="card-btn card-btn-view"
+                        style={{ padding: '6px 12px' }}
+                      >
+                        Adicionar
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handleSelectRecipeForDay(r.id)}
-                      className="card-btn card-btn-view"
-                      style={{ padding: '6px 12px' }}
-                    >
-                      Adicionar
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
 
               {myCollection.length === 0 && (
                 <p className="recipe-week-modal-empty-msg">

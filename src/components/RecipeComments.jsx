@@ -1,20 +1,57 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useComments } from '../context/CommentsContext';
 
 export default function RecipeComments({ recipeId }) {
   const { user } = useAuth();
-  const { addComment, deleteComment, getRecipeComments } = useComments();
+  const { comments, loading, fetchRecipeComments, addComment, editComment, deleteComment } = useComments();
   const [text, setText] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
 
-  const recipeComments = getRecipeComments(recipeId);
+  useEffect(() => {
+    if (recipeId) {
+      fetchRecipeComments(recipeId);
+    }
+  }, [recipeId, fetchRecipeComments]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!text.trim()) return;
 
-    addComment(recipeId, user.id, user.name || user.email, text);
-    setText('');
+    const result = await addComment(recipeId, text);
+    if (result.success) {
+      setText('');
+    }
+  };
+
+  const handleStartEdit = (comment) => {
+    setEditingId(comment._id || comment.id);
+    setEditText(comment.text);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditText('');
+  };
+
+  const handleSaveEdit = async (commentId) => {
+    if (!editText.trim()) return;
+
+    const result = await editComment(commentId, editText);
+    if (result.success) {
+      setEditingId(null);
+      setEditText('');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Deseja apagar o comentário?')) {
+      const result = await deleteComment(id);
+      if (!result?.success && result?.message) {
+        alert(result.message);
+      }
+    }
   };
 
   const formatDate = (isoString) => {
@@ -25,17 +62,19 @@ export default function RecipeComments({ recipeId }) {
         month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       });
     } catch {
       return '';
     }
   };
 
+  const currentUserId = user?._id || user?.id;
+
   return (
     <section className="comments-section">
       <h3 className="comments-title">
-        Comentários ({recipeComments.length})
+        Comentários ({comments.length})
       </h3>
 
       {/* Formulário de Envio */}
@@ -63,32 +102,82 @@ export default function RecipeComments({ recipeId }) {
       )}
 
       {/* Lista de Comentários */}
-      {recipeComments.length === 0 ? (
+      {loading ? (
+        <p className="comments-empty">A carregar comentários...</p>
+      ) : comments.length === 0 ? (
         <p className="comments-empty">Seja o primeiro a comentar!</p>
       ) : (
         <div className="comments-list">
-          {recipeComments.map((comment) => {
-            const isAuthor = user && String(user.id) === String(comment.userId);
+          {comments.map((comment) => {
+            const commentId = comment._id || comment.id;
+            const authorId = comment.user?._id || comment.user?.id || comment.user;
+            const userName = comment.user?.name
+              ? `${comment.user.name} ${comment.user.lastName || ''}`.trim()
+              : comment.userName || 'Usuário';
+
+            const isAuthor = Boolean(
+              currentUserId && authorId && String(currentUserId) === String(authorId)
+            );
+
+            const isEditingThis = editingId === commentId;
 
             return (
-              <div key={comment.id} className="comment-card">
+              <div key={commentId} className="comment-card">
                 <div className="comment-header">
-                  <strong className="comment-author">👤 {comment.userName}</strong>
-                  <span className="comment-date">{formatDate(comment.createdAt)}</span>
+                  <strong className="comment-author">👤 {userName}</strong>
+                  <span className="comment-date">
+                    {formatDate(comment.createdAt)}
+                  </span>
                 </div>
 
-                <p className="comment-body">
-                  {comment.text}
-                </p>
+                {isEditingThis ? (
+                  <div className="comment-edit-box" style={{ marginTop: '10px' }}>
+                    <textarea
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                      rows={2}
+                      className="comments-textarea"
+                    />
+                    <div className="comment-edit-actions" style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                      <button
+                        onClick={() => handleSaveEdit(commentId)}
+                        disabled={!editText.trim()}
+                        className="btn-submit-comment"
+                      >
+                        Guardar
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="btn-cancel-recipe"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="comment-body">{comment.text}</p>
 
-                {isAuthor && (
-                  <button
-                    onClick={() => deleteComment(comment.id)}
-                    title="Excluir comentário"
-                    className="btn-delete-comment"
-                  >
-                    Excluir
-                  </button>
+                    {isAuthor && (
+                      <div className="comment-actions" style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+                        <button
+                          onClick={() => handleStartEdit(comment)}
+                          title="Editar comentário"
+                          className="btn-edit-comment"
+                          style={{ background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', padding: 0 }}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => deleteComment(commentId)}
+                          title="Excluir comentário"
+                          className="btn-delete-comment"
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             );

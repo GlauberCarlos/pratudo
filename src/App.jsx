@@ -44,7 +44,7 @@ export default function App() {
             <Route path="/my-recipes" element={<MyRecipes />} />
             <Route path="/menu" element={<RecipeWeek />} />
             <Route path="/recipe/new" element={<RecipeNew />} />
-            <Route path="/recipe/:id/edit" element={<RecipeEdit />} />
+            <Route path="/recipe/edit/:id" element={<RecipeEdit />} />
             <Route path="/edit-profile" element={<EditProfile />} />
           </Route>
 

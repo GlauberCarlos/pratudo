@@ -1,97 +1,94 @@
-// ratingContext
-
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import api from '../services/api';
 
 const RatingsContext = createContext();
 
-const STORAGE_KEY = '@my-menu:ratings';
-
 export function RatingsProvider({ children }) {
-  const [ratings, setRatings] = useState(() => {
+  const [ratings, setRatings] = useState([]);
+
+  const fetchRatings = useCallback(async () => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      const parsed = saved ? JSON.parse(saved) : [];
-      // Garante que o retorno seja estritamente um Array
-      return Array.isArray(parsed) ? parsed : [];
+      const response = await api.get('/ratings');
+      setRatings(response.data || []);
     } catch (error) {
-      console.error('Erro ao carregar avaliações do localStorage:', error);
-      return [];
+      console.error('Erro ao buscar avaliações:', error);
     }
-  });
-
-  // Salva no localStorage sempre que a lista de avaliações mudar
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(ratings));
-    } catch (error) {
-      console.error('Erro ao salvar avaliações no localStorage:', error);
-    }
-  }, [ratings]);
-
-  // Envia ou atualiza a avaliação de um usuário para uma receita específica
-  const submitRating = useCallback((recipeId, userId, stars) => {
-    if (recipeId === undefined || recipeId === null || !userId) return;
-
-    setRatings((prevRatings) => {
-      // Garantia defensiva de que prevRatings é um array
-      const currentList = Array.isArray(prevRatings) ? prevRatings : [];
-
-      const existingIndex = currentList.findIndex(
-        (r) => String(r.recipeId) === String(recipeId) && String(r.userId) === String(userId)
-      );
-
-      if (existingIndex > -1) {
-        const updated = [...currentList];
-        updated[existingIndex] = {
-          ...updated[existingIndex],
-          rating: Number(stars),
-        };
-        return updated;
-      }
-
-      const newRating = {
-        id: Date.now(),
-        recipeId,
-        userId,
-        rating: Number(stars),
-      };
-
-      return [...currentList, newRating];
-    });
   }, []);
 
-  // Calcula estatísticas e busca a nota do usuário para uma receita específica
-  const getRecipeRating = useCallback((recipeId, currentUserId) => {
-    if (recipeId === undefined || recipeId === null) {
-      return { rating: 0, ratingCount: 0, userRating: 0, hasRated: false };
+  useEffect(() => {
+    fetchRatings();
+  }, [fetchRatings]);
+
+  const submitRating = useCallback(async (recipeId, userId, stars) => {
+    if (!recipeId || !userId) return;
+
+    try {
+      const response = await api.post('/ratings', {
+        recipeId,
+        stars: Number(stars),
+      });
+
+      const updatedEntry = response.data.rating;
+
+      setRatings((prevRatings) => {
+        const currentList = Array.isArray(prevRatings) ? prevRatings : [];
+        const existingIndex = currentList.findIndex(
+          (r) =>
+            String(r.recipe || r.recipeId) === String(recipeId) &&
+            String(r.user || r.userId) === String(userId)
+        );
+
+        if (existingIndex > -1) {
+          const updated = [...currentList];
+          updated[existingIndex] = updatedEntry;
+          return updated;
+        }
+
+        return [...currentList, updatedEntry];
+      });
+    } catch (error) {
+      console.error('Erro ao enviar avaliação:', error);
+      alert('Erro ao guardar a avaliação.');
     }
+  }, []);
 
-    // Garantia defensiva: se ratings não for array, usa array vazio
-    const safeRatings = Array.isArray(ratings) ? ratings : [];
+  const getRecipeRating = useCallback(
+    (recipeId, currentUserId) => {
+      if (!recipeId) {
+        return { rating: 0, ratingCount: 0, userRating: 0, hasRated: false };
+      }
 
-    // Filtra todas as avaliações pertencentes a esta receita
-    const recipeRatings = safeRatings.filter(
-      (r) => String(r.recipeId) === String(recipeId)
-    );
+      const safeRatings = Array.isArray(ratings) ? ratings : [];
 
-    const count = recipeRatings.length;
-    const totalStars = recipeRatings.reduce((acc, curr) => acc + (Number(curr.rating) || 0), 0);
-    const average = count > 0 ? totalStars / count : 0;
+      const recipeRatings = safeRatings.filter(
+        (r) => String(r.recipe || r.recipeId) === String(recipeId)
+      );
 
-    const userEntry = currentUserId
-      ? recipeRatings.find((r) => String(r.userId) === String(currentUserId))
-      : null;
+      const count = recipeRatings.length;
+      const totalStars = recipeRatings.reduce(
+        (acc, curr) => acc + (Number(curr.stars || curr.rating) || 0),
+        0
+      );
+      const average = count > 0 ? totalStars / count : 0;
 
-    return {
-      rating: Number(average.toFixed(1)),
-      ratingCount: count,
-      userRating: userEntry ? Number(userEntry.rating) : 0,
-      hasRated: Boolean(userEntry),
-    };
-  }, [ratings]);
+      const userEntry = currentUserId
+        ? recipeRatings.find(
+            (r) => String(r.user || r.userId) === String(currentUserId)
+          )
+        : null;
+
+      return {
+        rating: Number(average.toFixed(1)),
+        ratingCount: count,
+        userRating: userEntry ? Number(userEntry.stars || userEntry.rating) : 0,
+        hasRated: Boolean(userEntry),
+      };
+    },
+    [ratings]
+  );
 
   return (
-    <RatingsContext.Provider value={{ ratings, submitRating, getRecipeRating }}>
+    <RatingsContext.Provider value={{ ratings, submitRating, getRecipeRating, fetchRatings }}>
       {children}
     </RatingsContext.Provider>
   );
