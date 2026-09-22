@@ -1,37 +1,93 @@
-// RecipesContext
-import { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import api from '../services/api';
 
 const RecipesContext = createContext();
 
 export const RecipesProvider = ({ children }) => {
   const [recipes, setRecipes] = useState([]);
+  const [myRecipes, setMyRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchPublicRecipes = async (params = {}) => {
+  const fetchPublicRecipes = useCallback(async (params = {}) => {
     try {
       setLoading(true);
-      const response = await api.get('/recipes', { params });
+      setRecipes([]);
+
+      const apiParams = { ...params };
+      if (apiParams.searchTerm) {
+        apiParams.search = apiParams.searchTerm;
+        delete apiParams.searchTerm;
+      }
+      if (apiParams.category === 'Todas') {
+        delete apiParams.category;
+      }
+
+      const response = await api.get('/recipes', { params: apiParams });
       setRecipes(response.data);
     } catch (error) {
       console.error('Erro ao carregar receitas públicas:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
+  const fetchMyRecipes = useCallback(async (params = {}) => {
+    try {
+      setLoading(true);
+      const apiParams = { ...params };
+      if (apiParams.searchTerm) {
+        apiParams.search = apiParams.searchTerm;
+        delete apiParams.searchTerm;
+      }
+      if (apiParams.category === 'Todas') {
+        delete apiParams.category;
+      }
+
+      const response = await api.get('/recipes/my-recipes', { params: apiParams });
+      setMyRecipes(response.data);
+    } catch (error) {
+      console.error('Erro ao carregar as minhas receitas:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Busca síncrona na memória
   const getRecipeById = (id) => {
     if (!id) return null;
-    return recipes.find((recipe) =>
-      String(recipe._id) === String(id) || String(recipe.id) === String(id)
+    return (
+      recipes.find((r) => String(r._id) === String(id) || String(r.id) === String(id)) ||
+      myRecipes.find((r) => String(r._id) === String(id) || String(r.id) === String(id))
     );
   };
+
+  // NOVA FUNÇÃO: Busca na memória; se não encontrar, faz pedido à API
+  const fetchRecipeById = useCallback(async (id) => {
+    if (!id) return null;
+
+    // Procura primeiro no estado local (memória)
+    const localRecipe = recipes.find((r) => String(r._id) === String(id) || String(r.id) === String(id)) ||
+      myRecipes.find((r) => String(r._id) === String(id) || String(r.id) === String(id));
+
+    if (localRecipe) return localRecipe;
+
+    // Se não estiver em memória (ex: após refresh), busca no servidor
+    try {
+      const response = await api.get(`/recipes/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar receita por ID:', error);
+      return null;
+    }
+  }, [recipes, myRecipes]);
 
   const addRecipe = async (recipeData) => {
     try {
       const response = await api.post('/recipes', recipeData);
-      setRecipes((prev) => [response.data.recipe, ...prev]);
-      return { success: true, recipe: response.data.recipe };
+      const newRec = response.data.recipe;
+      setRecipes((prev) => [newRec, ...prev]);
+      setMyRecipes((prev) => [newRec, ...prev]);
+      return { success: true, recipe: newRec };
     } catch (error) {
       return {
         success: false,
@@ -43,9 +99,9 @@ export const RecipesProvider = ({ children }) => {
   const updateRecipe = async (id, updatedData) => {
     try {
       const response = await api.put(`/recipes/${id}`, updatedData);
-      setRecipes((prev) =>
-        prev.map((r) => (r._id === id ? response.data.recipe || response.data : r))
-      );
+      const updated = response.data.recipe || response.data;
+      setRecipes((prev) => prev.map((r) => (r._id === id ? updated : r)));
+      setMyRecipes((prev) => prev.map((r) => (r._id === id ? updated : r)));
       return { success: true };
     } catch (error) {
       return {
@@ -59,6 +115,7 @@ export const RecipesProvider = ({ children }) => {
     try {
       await api.delete(`/recipes/${id}`);
       setRecipes((prev) => prev.filter((r) => r._id !== id));
+      setMyRecipes((prev) => prev.filter((r) => r._id !== id));
       return { success: true };
     } catch (error) {
       return {
@@ -68,17 +125,16 @@ export const RecipesProvider = ({ children }) => {
     }
   };
 
-  useEffect(() => {
-    fetchPublicRecipes();
-  }, []);
-
   return (
     <RecipesContext.Provider
       value={{
         recipes,
+        myRecipes,
         loading,
         fetchPublicRecipes,
+        fetchMyRecipes,
         getRecipeById,
+        fetchRecipeById,
         addRecipe,
         updateRecipe,
         deleteRecipe,

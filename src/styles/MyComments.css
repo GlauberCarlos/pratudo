@@ -1,0 +1,137 @@
+/* ==========================================================================
+   PÁGINA DE MEUS COMENTÁRIOS (MyComments.css)
+   ========================================================================== */
+
+.comments-page-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 60px 20px 50px 20px;
+  color: #5D5D5D;
+}
+
+.comments-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.comments-page-title {
+  color: #5D5D5D;
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.loading-text {
+  text-align: center;
+  color: #888888;
+  font-size: 15px;
+}
+
+/* Grade de Comentários */
+.comments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* Card Individual de Comentário */
+.comment-card {
+  background-color: #FAFAFA;
+  border: 1px solid #E5E5E5;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.comment-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Imagem da Receita */
+.comment-card-image-wrapper {
+  width: 100%;
+  height: 140px;
+  background-color: #E5E5E5;
+}
+
+.comment-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Conteúdo */
+.comment-card-content {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  gap: 12px;
+}
+
+.comment-card-recipe-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #5D5D5D;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.comment-card-text {
+  font-size: 14px;
+  color: #616161;
+  margin: 0;
+  font-style: italic;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+/* Botões de Ação */
+.comment-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.comment-card-actions .btn-action {
+  flex: 1;
+  padding: 8px 0;
+  border: none;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.comment-card-actions .btn-view {
+  background-color: #66BB6A;
+  color: #FAFAFA;
+}
+
+.comment-card-actions .btn-delete {
+  background-color: #EF5350;
+  color: #FFFFFF;
+}
+
+.comment-card-actions .btn-action:hover {
+  opacity: 0.85;
+}
+
+@media (max-width: 600px) {
+  .comments-page-container {
+    padding: 20px 12px;
+  }
+}

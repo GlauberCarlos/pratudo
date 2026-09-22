@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../hooks/useAuth';
@@ -11,14 +12,42 @@ import '../styles/index.css';
 
 export default function RecipeDetails() {
   const { id } = useParams();
-  const { user } = useAuth();
-  const { getRecipeById, deleteRecipe } = useRecipes();
+  const { user, getUserName } = useAuth();
+  const { fetchRecipeById, deleteRecipe } = useRecipes();
   const navigate = useNavigate();
+
+  const [recipe, setRecipe] = useState(null);
+  const [loadingRecipe, setLoadingRecipe] = useState(true);
 
   const { getRecipeRating, submitRating } = useRatings();
   const { favorites, toggleFavorite } = useFavorites();
 
-  const recipe = getRecipeById(id);
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadRecipe = async () => {
+      setLoadingRecipe(true);
+      const data = await fetchRecipeById(id);
+      if (isMounted) {
+        setRecipe(data);
+        setLoadingRecipe(false);
+      }
+    };
+
+    loadRecipe();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, fetchRecipeById]);
+
+  if (loadingRecipe) {
+    return (
+      <div style={{ maxWidth: '800px', margin: '40px auto', textAlign: 'center' }}>
+        <p>A carregar receita...</p>
+      </div>
+    );
+  }
 
   if (!recipe) {
     return (
@@ -29,13 +58,16 @@ export default function RecipeDetails() {
     );
   }
 
-  // Identificadores (compatível com Mongo _id e com id antigo)
+  // Identificadores
   const recipeId = recipe._id || recipe.id;
   const currentUserId = user?._id || user?.id;
   const authorId = recipe.userId || recipe.author?._id || recipe.author;
 
-  // Verifica se o utilizador logado é o proprietário
+  // Permissões
   const isOwner = Boolean(currentUserId && authorId && String(currentUserId) === String(authorId));
+  const isAdmin = user?.role === 'admin';
+  const canDelete = isOwner || isAdmin;
+
   const isFav = favorites.includes(recipeId);
 
   const { rating, ratingCount, userRating, hasRated } = getRecipeRating(recipeId, currentUserId);
@@ -61,30 +93,37 @@ export default function RecipeDetails() {
     }
   };
 
-  // Garante a extração do tempo de preparo independentemente do nome do atributo
   const displayPrepTime = recipe.prepTime || recipe.prepareTime || 'N/A';
 
   return (
     <div className="recipe-details-container">
-      {/* Barra de Topo: Voltar à esquerda e Ações do Proprietário à direita */}
+      {/* Barra de Topo */}
       <div className="recipe-details-top-bar">
         <button onClick={() => navigate(-1)} className="btn-back">
           Voltar
         </button>
 
-        {isOwner && (
+        {/* Botões de Ação */}
+        {(isOwner || canDelete) && (
           <div style={{ display: 'flex', gap: '10px' }}>
-            <Link to={`/recipe/edit/${recipeId}`} className="btn-edit-recipe">
-              Editar Receita
-            </Link>
-            <button onClick={handleDelete} className="btn-delete-recipe">
-              Eliminar
-            </button>
+            {/* Apenas o DONO/AUTOR pode editar */}
+            {isOwner && (
+              <Link to={`/recipe/edit/${recipeId}`} className="btn-edit-recipe">
+                Editar Receita
+              </Link>
+            )}
+
+            {/* DONO OU ADMIN podem eliminar */}
+            {canDelete && (
+              <button onClick={handleDelete} className="btn-delete-recipe">
+                Eliminar
+              </button>
+            )}
           </div>
         )}
       </div>
 
-      {/* Wrapper de Imagem com Botão de Favorito Sobreposto */}
+      {/* Imagem */}
       <div className="recipe-details-image-wrapper">
         {user && (
           <button
@@ -103,15 +142,18 @@ export default function RecipeDetails() {
         />
       </div>
 
-      {/* Cabeçalho da Receita */}
+      {/* Cabeçalho */}
       <div className="recipe-details-header">
-        <span className="recipe-category-badge">
-          {recipe.category}
-        </span>
         <h1 className="recipe-details-title">{recipe.title}</h1>
         {recipe.description && (
           <p className="recipe-details-description">{recipe.description}</p>
         )}
+        <div className="recipe-author">
+          Autor: <span className="recipe-author-badge">{recipe.author?.name}</span>
+        </div>
+        <div className="recipe-category">
+          Dificuldade: <span className="recipe-category-badge">{recipe.category}</span>
+        </div>
       </div>
 
       {/* Metadados */}
@@ -134,20 +176,12 @@ export default function RecipeDetails() {
         </div>
       </div>
 
-      {/* Tags de Dieta e Restrições */}
+      {/* Tags */}
       <div className="recipe-tags-container">
-        {recipe.isVegetarian && (
-          <span className="tag-badge tag-veg">🌱 Vegetariano</span>
-        )}
-        {recipe.isVegan && (
-          <span className="tag-badge tag-vegan">🌿 Vegano</span>
-        )}
-        {recipe.isLactoseFree && (
-          <span className="tag-badge tag-lactose">🥛 Sem Lactose</span>
-        )}
-        {recipe.isGlutenFree && (
-          <span className="tag-badge tag-gluten">🌾 Sem Glúten</span>
-        )}
+        {recipe.isVegetarian && <span className="tag-badge tag-veg">🌱 Vegetariano</span>}
+        {recipe.isVegan && <span className="tag-badge tag-vegan">🌿 Vegano</span>}
+        {recipe.isLactoseFree && <span className="tag-badge tag-lactose">🥛 Sem Lactose</span>}
+        {recipe.isGlutenFree && <span className="tag-badge tag-gluten">🌾 Sem Glúten</span>}
 
         {recipe.restrictions &&
           Array.isArray(recipe.restrictions) &&
@@ -167,8 +201,8 @@ export default function RecipeDetails() {
           <ul className="recipe-list">
             {Array.isArray(recipe.ingredients)
               ? recipe.ingredients.map((ingredient, index) => (
-                  <li key={index} className="recipe-list-item">{ingredient}</li>
-                ))
+                <li key={index} className="recipe-list-item">{ingredient}</li>
+              ))
               : <li className="recipe-list-item">{recipe.ingredients}</li>
             }
           </ul>
@@ -184,8 +218,8 @@ export default function RecipeDetails() {
           <ol className="recipe-list">
             {Array.isArray(recipe.instructions)
               ? recipe.instructions.map((step, index) => (
-                  <li key={index} className="recipe-list-item">{step}</li>
-                ))
+                <li key={index} className="recipe-list-item">{step}</li>
+              ))
               : <li className="recipe-list-item">{recipe.instructions}</li>
             }
           </ol>

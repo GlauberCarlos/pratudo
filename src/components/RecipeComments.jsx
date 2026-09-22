@@ -1,3 +1,4 @@
+//recipeComments
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useComments } from '../context/CommentsContext';
@@ -70,6 +71,7 @@ export default function RecipeComments({ recipeId }) {
   };
 
   const currentUserId = user?._id || user?.id;
+  const isAdmin = user?.role === 'admin';
 
   return (
     <section className="comments-section">
@@ -119,6 +121,9 @@ export default function RecipeComments({ recipeId }) {
               currentUserId && authorId && String(currentUserId) === String(authorId)
             );
 
+            // Permissão de exclusão: Autor OU Admin
+            const canDelete = isAuthor || isAdmin;
+
             const isEditingThis = editingId === commentId;
 
             return (
@@ -158,23 +163,30 @@ export default function RecipeComments({ recipeId }) {
                   <>
                     <p className="comment-body">{comment.text}</p>
 
-                    {isAuthor && (
+                    {(isAuthor || canDelete) && (
                       <div className="comment-actions" style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
-                        <button
-                          onClick={() => handleStartEdit(comment)}
-                          title="Editar comentário"
-                          className="btn-edit-comment"
-                          style={{ background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', padding: 0 }}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => deleteComment(commentId)}
-                          title="Excluir comentário"
-                          className="btn-delete-comment"
-                        >
-                          Excluir
-                        </button>
+                        {/* Apenas o AUTOR pode EDITAR */}
+                        {isAuthor && (
+                          <button
+                            onClick={() => handleStartEdit(comment)}
+                            title="Editar comentário"
+                            className="btn-edit-comment"
+                            style={{ background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', padding: 0 }}
+                          >
+                            Editar
+                          </button>
+                        )}
+
+                        {/* AUTOR OU ADMIN podem EXCLUIR */}
+                        {canDelete && (
+                          <button
+                            onClick={() => handleDelete(commentId)}
+                            title="Excluir comentário"
+                            className="btn-delete-comment"
+                          >
+                            Excluir
+                          </button>
+                        )}
                       </div>
                     )}
                   </>

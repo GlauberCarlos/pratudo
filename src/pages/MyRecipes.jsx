@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+//myrecipes
+import { useState, useMemo, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 
 import { useAuth } from '../hooks/useAuth';
 import { useFavorites } from '../context/FavoritesContext';
@@ -9,112 +10,107 @@ import { useRecipes } from '../context/RecipesContext';
 import '../styles/RecipeList.css';
 import '../styles/index.css';
 
+const DIFFICULTY = ['Fácil', 'Médio', 'Difícil'];
+
 export default function MyRecipes() {
   const { user, getUserName } = useAuth();
   const { favorites, toggleFavorite } = useFavorites();
   const { getRecipeRating } = useRatings();
-  const { recipes, deleteRecipe } = useRecipes();
+  const { recipes, myRecipes, loading, fetchMyRecipes, fetchPublicRecipes, deleteRecipe } = useRecipes();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [category, setCategory] = useState('Todas');
-  const [isVegetarian, setIsVegetarian] = useState(false);
-  const [isVegan, setIsVegan] = useState(false);
-  const [isLactoseFree, setIsLactoseFree] = useState(false);
-  const [isGlutenFree, setIsGlutenFree] = useState(false);
   const [sortBy, setSortBy] = useState('title-asc');
-  const [onlyFavorites, setOnlyFavorites] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const searchTerm = searchParams.get('searchTerm') || '';
+  const category = searchParams.get('category') || 'Todas';
+  const onlyFavorites = searchParams.get('onlyFavorites') === 'true';
+  const isVegetarian = searchParams.get('isVegetarian') === 'true';
+  const isVegan = searchParams.get('isVegan') === 'true';
+  const isLactoseFree = searchParams.get('isLactoseFree') === 'true';
+  const isGlutenFree = searchParams.get('isGlutenFree') === 'true';
 
   const currentUserId = user?._id || user?.id;
+  const isAdmin = user?.role === 'admin';
 
-  // Extrai dinamicamente as categorias únicas das receitas
-  const categoriesList = useMemo(() => {
-    const categoriesSet = new Set(
-      recipes.map((r) => r.category).filter(Boolean)
-    );
-    return Array.from(categoriesSet);
-  }, [recipes]);
+  useEffect(() => {
+    const params = {};
+    if (searchTerm) params.searchTerm = searchTerm;
+    if (category && category !== 'Todas') params.category = category;
+    if (isVegetarian) params.isVegetarian = true;
+    if (isVegan) params.isVegan = true;
+    if (isLactoseFree) params.isLactoseFree = true;
+    if (isGlutenFree) params.isGlutenFree = true;
 
-  // Filtra receitas criadas pelo usuário ou favoritadas por ele
-  const rawCollection = useMemo(() => {
-    return recipes.filter((recipe) => {
-      const recId = recipe._id || recipe.id;
-      const authorId = recipe.userId || recipe.author?._id || recipe.author;
-      
-      const isMine = Boolean(currentUserId && authorId && String(currentUserId) === String(authorId));
-      const isFav = favorites.includes(recId);
+    fetchMyRecipes(params);
+    fetchPublicRecipes(params);
+  }, [
+    searchTerm,
+    category,
+    isVegetarian,
+    isVegan,
+    isLactoseFree,
+    isGlutenFree,
+    fetchMyRecipes,
+    fetchPublicRecipes,
+  ]);
 
-      return isMine || isFav;
-    });
-  }, [recipes, favorites, currentUserId]);
+  const handleFilterChange = (key, value) => {
+    const newParams = new URLSearchParams(searchParams);
+
+    if (value && value !== 'Todas' && value !== false) {
+      newParams.set(key, value);
+    } else {
+      newParams.delete(key);
+    }
+
+    setSearchParams(newParams, { replace: true });
+  };
 
   const myCollection = useMemo(() => {
-    return Array.from(
-      new Map(rawCollection.map((recipe) => [recipe._id || recipe.id, recipe])).values()
-    );
-  }, [rawCollection]);
+    const favoritedPublicRecipes = recipes.filter((r) => favorites.includes(r._id || r.id));
+    const combined = [...myRecipes, ...favoritedPublicRecipes];
 
-  // Anexa dinamicamente as notas calculadas do RatingsContext
+    return Array.from(
+      new Map(combined.map((recipe) => [recipe._id || recipe.id, recipe])).values()
+    );
+  }, [myRecipes, recipes, favorites]);
+
   const recipesWithRatings = useMemo(() => {
     return myCollection.map((recipe) => {
       const recId = recipe._id || recipe.id;
-      const { rating, ratingCount } = getRecipeRating(recId);
+      const { rating, ratingCount } = getRecipeRating ? getRecipeRating(recId) : { rating: 0, ratingCount: 0 };
       return { ...recipe, rating, ratingCount };
     });
   }, [myCollection, getRecipeRating]);
 
-  // Aplicar filtros de busca
-  const filteredRecipes = recipesWithRatings.filter((recipe) => {
-    const recId = recipe._id || recipe.id;
-    const term = searchTerm.toLowerCase().trim();
-    const matchTitle = recipe.title?.toLowerCase().includes(term);
-    const matchDescription = recipe.description?.toLowerCase().includes(term);
-    const matchIngredients = Array.isArray(recipe.ingredients) && recipe.ingredients.some((ing) =>
-      ing.toLowerCase().includes(term)
-    );
-    const matchRestrictions = Array.isArray(recipe.restrictions) && recipe.restrictions.some((res) =>
-      res.toLowerCase().includes(term)
-    );
-    const matchesSearch =
-      !term || matchTitle || matchDescription || matchIngredients || matchRestrictions;
+  const filteredRecipes = useMemo(() => {
+    return recipesWithRatings.filter((recipe) => {
+      const recId = recipe._id || recipe.id;
+      const isFav = favorites.includes(recId);
+      return !onlyFavorites || isFav;
+    });
+  }, [recipesWithRatings, favorites, onlyFavorites]);
 
-    const matchesCategory = category === 'Todas' || recipe.category === category;
-    const isFav = favorites.includes(recId);
-    const matchesOnlyFavorites = !onlyFavorites || isFav;
-    const matchesVegetarian = !isVegetarian || recipe.isVegetarian;
-    const matchesVegan = !isVegan || recipe.isVegan;
-    const matchesLactoseFree = !isLactoseFree || recipe.isLactoseFree;
-    const matchesGlutenFree = !isGlutenFree || recipe.isGlutenFree;
-
-    return (
-      matchesSearch &&
-      matchesCategory &&
-      matchesOnlyFavorites &&
-      matchesVegetarian &&
-      matchesVegan &&
-      matchesLactoseFree &&
-      matchesGlutenFree
-    );
-  });
-
-  // Ordenação
-  const sortedRecipes = [...filteredRecipes].sort((a, b) => {
-    switch (sortBy) {
-      case 'title-asc':
-        return (a.title || '').localeCompare(b.title || '');
-      case 'title-desc':
-        return (b.title || '').localeCompare(a.title || '');
-      case 'rating-desc':
-        return (b.rating || 0) - (a.rating || 0);
-      case 'rating-asc':
-        return (a.rating || 0) - (b.rating || 0);
-      case 'ratingCount-desc':
-        return (b.ratingCount || 0) - (a.ratingCount || 0);
-      case 'ratingCount-asc':
-        return (a.ratingCount || 0) - (b.ratingCount || 0);
-      default:
-        return 0;
-    }
-  });
+  const sortedRecipes = useMemo(() => {
+    return [...filteredRecipes].sort((a, b) => {
+      switch (sortBy) {
+        case 'title-asc':
+          return (a.title || '').localeCompare(b.title || '');
+        case 'title-desc':
+          return (b.title || '').localeCompare(a.title || '');
+        case 'rating-desc':
+          return (b.rating || 0) - (a.rating || 0);
+        case 'rating-asc':
+          return (a.rating || 0) - (b.rating || 0);
+        case 'ratingCount-desc':
+          return (b.ratingCount || 0) - (a.ratingCount || 0);
+        case 'ratingCount-asc':
+          return (a.ratingCount || 0) - (b.ratingCount || 0);
+        default:
+          return 0;
+      }
+    });
+  }, [filteredRecipes, sortBy]);
 
   const handleDelete = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir esta receita?')) {
@@ -134,25 +130,22 @@ export default function MyRecipes() {
         </Link>
       </div>
 
-      {/* PAINEL DE FILTROS EM 3 LINHAS */}
       <div className="recipes-filter-panel">
-
-        {/* LINHA 1: Buscar, Categoria e Ordenar */}
         <div className="filter-row-1">
           <input
             type="text"
             placeholder="Buscar por título, ingrediente ou restrição..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
             className="filter-input-search"
           />
           <select
             value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            onChange={(e) => handleFilterChange('category', e.target.value)}
             className="filter-select"
           >
             <option value="Todas">Todas as Categorias</option>
-            {categoriesList.map((cat) => (
+            {DIFFICULTY.map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
               </option>
@@ -173,25 +166,23 @@ export default function MyRecipes() {
           </select>
         </div>
 
-        {/* LINHA 2: Somente Favoritos */}
         <div className="filter-row-2">
           <label className="checkbox-label">
             <input
               type="checkbox"
               checked={onlyFavorites}
-              onChange={(e) => setOnlyFavorites(e.target.checked)}
+              onChange={(e) => handleFilterChange('onlyFavorites', e.target.checked)}
             />
             Somente Favoritos
           </label>
         </div>
 
-        {/* LINHA 3: Restrições */}
         <div className="filter-row-3">
           <label className="checkbox-label">
             <input
               type="checkbox"
               checked={isVegetarian}
-              onChange={(e) => setIsVegetarian(e.target.checked)}
+              onChange={(e) => handleFilterChange('isVegetarian', e.target.checked)}
             />
             🌱 Vegetariano
           </label>
@@ -199,7 +190,7 @@ export default function MyRecipes() {
             <input
               type="checkbox"
               checked={isVegan}
-              onChange={(e) => setIsVegan(e.target.checked)}
+              onChange={(e) => handleFilterChange('isVegan', e.target.checked)}
             />
             🌿 Vegano
           </label>
@@ -207,7 +198,7 @@ export default function MyRecipes() {
             <input
               type="checkbox"
               checked={isLactoseFree}
-              onChange={(e) => setIsLactoseFree(e.target.checked)}
+              onChange={(e) => handleFilterChange('isLactoseFree', e.target.checked)}
             />
             🥛 Sem Lactose
           </label>
@@ -215,16 +206,16 @@ export default function MyRecipes() {
             <input
               type="checkbox"
               checked={isGlutenFree}
-              onChange={(e) => setIsGlutenFree(e.target.checked)}
+              onChange={(e) => handleFilterChange('isGlutenFree', e.target.checked)}
             />
             🌾 Sem Glúten
           </label>
         </div>
-
       </div>
 
-      {/* GRADE DE CARDS */}
-      {sortedRecipes.length === 0 ? (
+      {loading ? (
+        <p style={{ textAlign: 'center', padding: '40px 0' }}>A carregar a sua coleção...</p>
+      ) : sortedRecipes.length === 0 ? (
         <p style={{ color: '#5D5D5D', textAlign: 'center', padding: '40px 0' }}>
           Nenhuma receita encontrada com os filtros selecionados.
         </p>
@@ -233,10 +224,16 @@ export default function MyRecipes() {
           {sortedRecipes.map((recipe) => {
             const recipeId = recipe._id || recipe.id;
             const authorId = recipe.userId || recipe.author?._id || recipe.author;
-            
+
             const isMine = Boolean(currentUserId && authorId && String(currentUserId) === String(authorId));
+            const canDelete = isMine || isAdmin;
+
             const isFav = favorites.includes(recipeId);
-            const authorName = recipe.author?.name || (getUserName ? getUserName(authorId) : 'Autor');
+            const authorName = recipe.author?.name
+              ? `${recipe.author.name} ${recipe.author.lastName || ''}`
+              : getUserName
+              ? getUserName(authorId)
+              : 'Autor';
 
             const prepTimeDisplay = recipe.prepTime || recipe.prepareTime || 'N/A';
 
@@ -245,7 +242,6 @@ export default function MyRecipes() {
                 key={recipeId}
                 className={`recipe-card ${isMine ? 'own-recipe' : 'third-party-recipe'}`}
               >
-                {/* Imagem + Overlay do Favorito */}
                 <div className="recipe-card-image-wrapper">
                   <img
                     src={recipe.img || 'https://via.placeholder.com/300x150'}
@@ -261,10 +257,8 @@ export default function MyRecipes() {
                   </button>
                 </div>
 
-                {/* Conteúdo */}
                 <div className="recipe-card-content">
                   <div>
-                    {/* Linha 1: Título (Esq) e Avaliação (Dir) */}
                     <div className="recipe-card-header">
                       <h3 className="recipe-card-title">{recipe.title}</h3>
                       <span className="recipe-card-rating">
@@ -273,7 +267,6 @@ export default function MyRecipes() {
                       </span>
                     </div>
 
-                    {/* Linha 2: Tempo/Porções (Esq) e Nome do Autor (Dir) */}
                     <div className="recipe-card-meta">
                       <div className="meta-info">
                         <span>⏱️ {prepTimeDisplay}</span>
@@ -285,27 +278,27 @@ export default function MyRecipes() {
                     </div>
                   </div>
 
-                  {/* Linha 3: Botões de Ação */}
+                  {/* Ações */}
                   <div className="recipe-card-actions">
-                    {isMine ? (
-                      <>
-                        <Link to={`/recipe/${recipeId}`} className="btn-view">
-                          Ver
-                        </Link>
-                        <Link to={`/recipe/edit/${recipeId}`} className="btn-edit">
-                          Editar
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(recipeId)}
-                          className="btn-delete"
-                        >
-                          Excluir
-                        </button>
-                      </>
-                    ) : (
-                      <Link to={`/recipe/${recipeId}`} className="btn-view">
-                        Ver Detalhes
+                    <Link to={`/recipe/${recipeId}`} className="btn-view">
+                      {isMine ? 'Ver' : 'Ver Detalhes'}
+                    </Link>
+
+                    {/* Editar visível APENAS para o dono */}
+                    {isMine && (
+                      <Link to={`/recipe/edit/${recipeId}`} className="btn-edit">
+                        Editar
                       </Link>
+                    )}
+
+                    {/* Excluir visível para o dono OU para o Admin */}
+                    {canDelete && (
+                      <button
+                        onClick={() => handleDelete(recipeId)}
+                        className="btn-delete"
+                      >
+                        Excluir
+                      </button>
                     )}
                   </div>
                 </div>

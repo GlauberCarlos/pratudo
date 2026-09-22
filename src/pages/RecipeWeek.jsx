@@ -1,4 +1,3 @@
-// RecipeWeek
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -19,56 +18,85 @@ const DAYS_OF_WEEK = [
   { key: 'sunday', label: 'Domingo', initial: 'D' },
 ];
 
+// Helper para ler o localStorage com segurança antes do render
+const getSavedStorage = (userId) => {
+  if (!userId) return null;
+  try {
+    const data = localStorage.getItem(`@my-menu:weekly-plan:${userId}`);
+    return data ? JSON.parse(data) : null;
+  } catch (e) {
+    return null;
+  }
+};
+
 export default function RecipeWeek() {
   const { user } = useAuth();
-  const { recipes } = useRecipes();
+  const { recipes, myRecipes, fetchMyRecipes, fetchPublicRecipes } = useRecipes();
   const { favorites } = useFavorites();
   const navigate = useNavigate();
 
   const currentUserId = user?._id || user?.id;
 
-  // 1. Coleção de receitas do usuário (Minhas + Favoritadas)
-  const myCollection = useMemo(() => {
-    return recipes.filter((recipe) => {
-      const recId = recipe._id || recipe.id;
-      const authorId = recipe.userId || recipe.author?._id || recipe.author;
-      const isMine = Boolean(currentUserId && authorId && String(currentUserId) === String(authorId));
-      const isFav = favorites.includes(recId);
-      return isMine || isFav;
-    });
-  }, [recipes, favorites, currentUserId]);
+  // Carrega do localStorage no exato momento da montagem dos estados
+  const savedStorage = useMemo(() => getSavedStorage(currentUserId), [currentUserId]);
 
-  // 2. Estados dos Filtros do Painel Lateral
-  const [selectedDays, setSelectedDays] = useState({
-    monday: true,
-    tuesday: true,
-    wednesday: true,
-    thursday: true,
-    friday: true,
-    saturday: true,
-    sunday: true,
+  // Carrega as receitas do utilizador e as públicas
+  useEffect(() => {
+    fetchMyRecipes();
+    fetchPublicRecipes();
+  }, [fetchMyRecipes, fetchPublicRecipes]);
+
+  // 1. Coleção do Utilizador para Seleção/Sorteio (Minhas + Favoritas)
+  const myCollection = useMemo(() => {
+    const favoritedPublicRecipes = recipes.filter((r) => favorites.includes(r._id || r.id));
+    const combined = [...myRecipes, ...favoritedPublicRecipes];
+
+    return Array.from(
+      new Map(combined.map((recipe) => [recipe._id || recipe.id, recipe])).values()
+    );
+  }, [myRecipes, recipes, favorites]);
+
+  // Map completo para exibir detalhes da receita no card
+  const allKnownRecipes = useMemo(() => {
+    const combined = [...recipes, ...myRecipes];
+    return Array.from(
+      new Map(combined.map((recipe) => [recipe._id || recipe.id, recipe])).values()
+    );
+  }, [recipes, myRecipes]);
+
+  // 2. Estados dos Filtros com Inicialização Lazy
+  const [selectedDays, setSelectedDays] = useState(() => {
+    return savedStorage?.selectedDays || {
+      monday: true,
+      tuesday: true,
+      wednesday: true,
+      thursday: true,
+      friday: true,
+      saturday: true,
+      sunday: true,
+    };
   });
 
-  const [filterVeg, setFilterVeg] = useState(false);
-  const [filterVegan, setFilterVegan] = useState(false);
-  const [filterLactose, setFilterLactose] = useState(false);
-  const [filterGluten, setFilterGluten] = useState(false);
-  const [restrictionsInput, setRestrictionsInput] = useState('');
+  const [filterVeg, setFilterVeg] = useState(() => savedStorage?.filters?.filterVeg || false);
+  const [filterVegan, setFilterVegan] = useState(() => savedStorage?.filters?.filterVegan || false);
+  const [filterLactose, setFilterLactose] = useState(() => savedStorage?.filters?.filterLactose || false);
+  const [filterGluten, setFilterGluten] = useState(() => savedStorage?.filters?.filterGluten || false);
+  const [restrictionsInput, setRestrictionsInput] = useState(() => savedStorage?.filters?.restrictionsInput || '');
 
-  // 3. Estado do Planejamento Semanal: { monday: recipeId, tuesday: recipeId, ... }
-  const [weeklyPlan, setWeeklyPlan] = useState({});
+  // 3. Estado do Planeamento Semanal
+  const [weeklyPlan, setWeeklyPlan] = useState(() => savedStorage?.plan || {});
 
-  // 4. Estado para Controle do Modal de Seleção
+  // 4. Controle do Modal
   const [modalDayKey, setModalDayKey] = useState(null);
   const [modalSearch, setModalSearch] = useState('');
 
-  // Carregar planejamento da API ao iniciar
+  // Carregar/Sincronizar APENAS o plano de receitas vindo da API ao iniciar
   useEffect(() => {
-    async function loadPlan() {
+    async function loadPlanFromApi() {
       if (!currentUserId) return;
       try {
         const response = await api.get('/menu');
-        const planData = response.data || {};
+        const planData = response.data?.plan || response.data || {};
 
         const cleanedPlan = {};
         Object.keys(planData).forEach((day) => {
@@ -77,28 +105,43 @@ export default function RecipeWeek() {
           }
         });
 
-        setWeeklyPlan(cleanedPlan);
-      } catch (error) {
-        console.error('Erro ao carregar planeamento da API, usando fallback:', error);
-        const savedPlan = localStorage.getItem(`@my-menu:weekly-plan:${currentUserId}`);
-        if (savedPlan) {
-          try {
-            setWeeklyPlan(JSON.parse(savedPlan));
-          } catch (e) {
-            console.error(e);
-          }
+        if (Object.keys(cleanedPlan).length > 0) {
+          setWeeklyPlan(cleanedPlan);
         }
+      } catch (error) {
+        console.error('Erro ao sincronizar planeamento da API, mantendo plano local:', error);
       }
     }
 
-    loadPlan();
+    loadPlanFromApi();
   }, [currentUserId]);
+
+  // Auto-Save no localStorage sempre que qualquer estado de filtro/plano mudar
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const storagePayload = {
+      plan: weeklyPlan,
+      selectedDays,
+      filters: {
+        filterVeg,
+        filterVegan,
+        filterLactose,
+        filterGluten,
+        restrictionsInput,
+      },
+    };
+
+    localStorage.setItem(
+      `@my-menu:weekly-plan:${currentUserId}`,
+      JSON.stringify(storagePayload)
+    );
+  }, [selectedDays, filterVeg, filterVegan, filterLactose, filterGluten, restrictionsInput, weeklyPlan, currentUserId]);
 
   const savePlan = async (newPlan) => {
     setWeeklyPlan(newPlan);
 
     if (currentUserId) {
-      localStorage.setItem(`@my-menu:weekly-plan:${currentUserId}`, JSON.stringify(newPlan));
       try {
         await api.put('/menu', { plan: newPlan });
       } catch (error) {
@@ -140,7 +183,6 @@ export default function RecipeWeek() {
     return pool[randomIndex];
   };
 
-  // Ação: Gerar Cardápio Geral
   const handleGenerateMenu = () => {
     const pool = getFilteredCollection();
 
@@ -165,12 +207,10 @@ export default function RecipeWeek() {
     savePlan(updatedPlan);
   };
 
-  // Ação: Limpar Cardápio
   const handleClearMenu = () => {
     savePlan({});
   };
 
-  // Ação: Sortear para um único dia
   const handleRandomizeDay = (dayKey) => {
     const pool = getFilteredCollection();
     if (pool.length === 0) {
@@ -311,7 +351,7 @@ export default function RecipeWeek() {
         <main className="recipe-week-grid">
           {DAYS_OF_WEEK.map((day) => {
             const recipeId = weeklyPlan[day.key];
-            const recipe = recipes.find(
+            const recipe = allKnownRecipes.find(
               (r) => String(r._id || r.id) === String(recipeId)
             );
             const prepTimeDisplay = recipe?.prepTime || recipe?.prepareTime || 'N/A';

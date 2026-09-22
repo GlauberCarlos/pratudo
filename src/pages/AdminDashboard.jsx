@@ -1,10 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { Link } from 'react-router-dom';
+
+import { AuthContext } from '../context/AuthContext';
+
 import api from '../services/api';
 
 import '../styles/AdminDashboard.css';
 import '../styles/index.css';
 
 export default function AdminDashboard() {
+  const { user: currentUser } = useContext(AuthContext);
   const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -112,14 +117,14 @@ export default function AdminDashboard() {
                     <td>{u.email}</td>
                     <td>
                       <div className="actions-cell">
-                        <button 
-                          onClick={() => handleApprove(u._id)} 
+                        <button
+                          onClick={() => handleApprove(u._id)}
                           className="btn-action btn-action-approve"
                         >
                           Aprovar
                         </button>
-                        <button 
-                          onClick={() => handleReject(u._id)} 
+                        <button
+                          onClick={() => handleReject(u._id)}
                           className="btn-action btn-action-reject"
                         >
                           Rejeitar
@@ -149,41 +154,55 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {usersList.map((u) => (
-                <tr key={u._id}>
-                  <td>{u.name} {u.lastName}</td>
-                  <td>{u.email}</td>
-                  <td>
-                    <span className={`badge ${
-                      u.role === 'admin' ? 'badge-role-admin' :
-                      u.role === 'admin_pending' ? 'badge-role-pending' : 'badge-role-user'
-                    }`}>
-                      {u.role}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`badge ${u.status === 'active' ? 'badge-status-active' : 'badge-status-inactive'}`}>
-                      {u.status === 'active' ? 'Ativo' : 'Inativo'}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="actions-cell">
-                      <button 
-                        onClick={() => handleToggleStatus(u._id)} 
-                        className="btn-action btn-action-toggle"
-                      >
-                        {u.status === 'active' ? 'Desativar' : 'Ativar'}
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(u._id)} 
-                        className="btn-action btn-action-delete"
-                      >
-                        Excluir
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {usersList.map((u) => {
+                const isSelf = String(currentUser?._id || currentUser?.id) === String(u._id);
+
+                return (
+                  <tr key={u._id}>
+                    <td>{u.name} {u.lastName}</td>
+                    <td>{u.email}</td>
+                    <td>{u.role}</td>
+                    <td>{u.status}</td>
+                    <td>
+                      <div className="actions-cell">
+                        {/* Se for o próprio admin, esconde ou desativa o botão de editar */}
+                        {!isSelf ? (
+                          <Link
+                            to={`/admin/users/edit/${u._id}`}
+                            className="btn-action btn-action-edit"
+                          >
+                            Editar
+                          </Link>
+                        ) : (
+                          <span
+                            className="btn-action btn-action-disabled"
+                            title="Para editar o seu próprio perfil, aceda à página de Perfil"
+                            style={{ opacity: 0.5, cursor: 'not-allowed', pointerEvents: 'none' }}
+                          >
+                            Editar
+                          </span>
+                        )}
+
+                        <button
+                          onClick={() => handleToggleStatus(u._id)}
+                          className="btn-action btn-action-toggle"
+                          disabled={isSelf} // Também previne que desative a sua própria conta
+                        >
+                          {u.status === 'active' ? 'Desativar' : 'Ativar'}
+                        </button>
+
+                        <button
+                          onClick={() => handleDelete(u._id)}
+                          className="btn-action btn-action-delete"
+                          disabled={isSelf} // Previne que exclua a sua própria conta
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

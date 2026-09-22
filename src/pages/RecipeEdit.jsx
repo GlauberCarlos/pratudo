@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useRecipes } from '../context/RecipesContext';
+import api from '../services/api';
 
 import '../styles/RecipeForm.css';
 import '../styles/index.css';
@@ -8,10 +9,10 @@ import '../styles/index.css';
 export default function RecipeEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { recipes, updateRecipe, loading } = useRecipes();
+  const { getRecipeById, updateRecipe } = useRecipes();
 
-  // Localiza a receita pelo _id do Mongoose
-  const recipeToEdit = recipes.find((item) => item._id === id);
+  const [recipeToEdit, setRecipeToEdit] = useState(() => getRecipeById(id));
+  const [fetching, setFetching] = useState(!recipeToEdit);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -28,6 +29,32 @@ export default function RecipeEdit() {
   const [isLactoseFree, setIsLactoseFree] = useState(false);
   const [isGlutenFree, setIsGlutenFree] = useState(false);
 
+  // Busca a receita da API caso não esteja nos estados globais do contexto
+  useEffect(() => {
+    async function loadRecipe() {
+      if (!id) return;
+      try {
+        setFetching(true);
+        const response = await api.get(`/recipes/${id}`);
+        setRecipeToEdit(response.data);
+      } catch (error) {
+        console.error('Erro ao buscar receita para edição:', error);
+        setRecipeToEdit(null);
+      } finally {
+        setFetching(false);
+      }
+    }
+
+    const localRecipe = getRecipeById(id);
+    if (localRecipe) {
+      setRecipeToEdit(localRecipe);
+      setFetching(false);
+    } else {
+      loadRecipe();
+    }
+  }, [id, getRecipeById]);
+
+  // Preenche o formulário quando os dados da receita chegam
   useEffect(() => {
     if (recipeToEdit) {
       setTitle(recipeToEdit.title || '');
@@ -35,7 +62,6 @@ export default function RecipeEdit() {
       setCategory(recipeToEdit.category || 'Almoço');
       setImg(recipeToEdit.img || '');
 
-      // Extrai apenas os números para preencher os campos <input type="number">
       const rawPrep = recipeToEdit.prepTime
         ? String(recipeToEdit.prepTime).replace(/\D/g, '')
         : '';
@@ -70,10 +96,10 @@ export default function RecipeEdit() {
     }
   }, [recipeToEdit]);
 
-  if (loading) {
+  if (fetching) {
     return (
       <div className="recipe-form-container">
-        <p style={{ textAlign: 'center', padding: '40px 0' }}>Carregando dados da receita...</p>
+        <p style={{ textAlign: 'center', padding: '40px 0' }}>A carregar dados da receita...</p>
       </div>
     );
   }
@@ -82,6 +108,7 @@ export default function RecipeEdit() {
     return (
       <div className="recipe-form-container" style={{ textAlign: 'center', padding: '40px 0' }}>
         <h2>Receita não encontrada!</h2>
+        <br />
         <Link to="/my-recipes" style={{ color: 'var(--primary-color, #ff6b6b)' }}>
           ← Voltar para Minhas Receitas
         </Link>

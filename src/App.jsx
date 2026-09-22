@@ -19,6 +19,8 @@ import RecipeDetails from './pages/RecipeDetails';
 import RecipeExplorer from './pages/RecipeExplorer';
 import NotFound from './pages/NotFound';
 import EditProfile from './pages/EditProfile';
+import AdminEditUser from './pages/AdminEditUser';
+import MyComments from './pages/MyComments';
 
 export default function App() {
   return (
@@ -46,11 +48,13 @@ export default function App() {
             <Route path="/recipe/new" element={<RecipeNew />} />
             <Route path="/recipe/edit/:id" element={<RecipeEdit />} />
             <Route path="/edit-profile" element={<EditProfile />} />
+            <Route path="/my-comments" element={<MyComments />} />
           </Route>
 
           {/* ROTA ADMIN */}
           <Route element={<AdminRoute />}>
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/users/edit/:id" element={<AdminEditUser />} />
           </Route>
 
         </Route>

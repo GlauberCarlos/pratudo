@@ -162,6 +162,7 @@
 }
 
 .btn-action {
+  all: unset;
   padding: 6px 12px;
   border-radius: 6px;
   font-size: 13px;
@@ -172,7 +173,7 @@
 }
 
 .btn-action:hover {
-  opacity: 0.9;
+  opacity: 0.5;
 }
 
 .btn-action:active {
@@ -195,13 +196,13 @@
   color: #5D5D5D;
 }
 
-.btn-action-toggle:hover {
-  border-color: #5D5D5D;
-  background-color: #FAFAFA;
-}
-
 .btn-action-delete {
   background-color: #E53935; 
+  color: #FFFFFF;
+}
+
+.btn-action-edit {  
+  background-color: #FFA726; 
   color: #FFFFFF;
 }
 

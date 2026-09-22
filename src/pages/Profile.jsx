@@ -1,5 +1,5 @@
 import { useAuth } from '../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 import '../styles/Profile.css';
 import '../styles/index.css';
@@ -67,6 +67,9 @@ export default function Profile() {
 
       {/* Botões de Edição (Futuras Funcionalidades) */}
       <div className="profile-actions-section">
+        <Link to="/my-comments" className="btn-profile-option">
+          Meus Comentários
+        </Link>
         <button
           className="btn-profile-action"
           onClick={() => editProfile()}

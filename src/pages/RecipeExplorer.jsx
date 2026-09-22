@@ -1,5 +1,5 @@
-// RecipeExplorer
-import { useState, useMemo } from 'react';
+//explorer
+import { useState, useMemo, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { useAuth } from '../hooks/useAuth';
@@ -10,22 +10,55 @@ import { useRecipes } from '../context/RecipesContext';
 import '../styles/RecipeList.css';
 import '../styles/index.css';
 
+const DIFFICULTY = ['Fácil', 'Médio', 'Difícil'];
+
 export default function RecipeExplorer() {
   const { user } = useAuth();
   const { favorites, toggleFavorite } = useFavorites();
   const { getRecipeRating } = useRatings();
-  const { recipes, loading } = useRecipes();
+  const { recipes, loading, fetchPublicRecipes, deleteRecipe } = useRecipes();
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const [sortBy, setSortBy] = useState('title-asc');
-
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const searchTerm = searchParams.get('searchTerm') || "";
-  const category = searchParams.get('category') || "Todas";
+  const searchTerm = searchParams.get('searchTerm') || '';
+  const category = searchParams.get('category') || 'Todas';
   const isVegetarian = searchParams.get('isVegetarian') === 'true';
   const isVegan = searchParams.get('isVegan') === 'true';
   const isLactoseFree = searchParams.get('isLactoseFree') === 'true';
   const isGlutenFree = searchParams.get('isGlutenFree') === 'true';
+
+  const currentUserId = user?._id || user?.id;
+  const isAdmin = user?.role === 'admin';
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const params = {};
+    if (searchTerm) params.searchTerm = searchTerm;
+    if (category && category !== 'Todas') params.category = category;
+    if (isVegetarian) params.isVegetarian = true;
+    if (isVegan) params.isVegan = true;
+    if (isLactoseFree) params.isLactoseFree = true;
+    if (isGlutenFree) params.isGlutenFree = true;
+
+    fetchPublicRecipes(params).finally(() => {
+      if (isMounted) setIsInitialLoad(false);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    searchTerm,
+    category,
+    isVegetarian,
+    isVegan,
+    isLactoseFree,
+    isGlutenFree,
+    fetchPublicRecipes,
+  ]);
 
   const handleFilterChange = (key, value) => {
     const newParams = new URLSearchParams(searchParams);
@@ -39,72 +72,50 @@ export default function RecipeExplorer() {
     setSearchParams(newParams, { replace: true });
   };
 
-  // Extrai dinamicamente as categorias únicas das receitas
-  const categoriesList = useMemo(() => {
-    const categoriesSet = new Set(recipes.map((r) => r.category).filter(Boolean));
-    return Array.from(categoriesSet);
-  }, [recipes]);
+  const handleDelete = async (id) => {
+    if (window.confirm('Tem certeza que deseja excluir esta receita?')) {
+      const result = await deleteRecipe(id);
+      if (!result?.success && result?.message) {
+        alert(result.message);
+      }
+    }
+  };
 
-  const publicRecipes = useMemo(() => {
+  // 1. Filtra receitas de terceiros
+  const publicThirdPartyRecipes = useMemo(() => {
     return recipes.filter((recipe) => {
       const authorId = recipe.author?._id || recipe.author;
-      return recipe.isPublic && String(authorId) !== String(user?.id);
+      return !currentUserId || String(authorId) !== String(currentUserId);
     });
-  }, [recipes, user]);
+  }, [recipes, currentUserId]);
 
+  // 2. Anexa avaliações
   const recipesWithRatings = useMemo(() => {
-    return publicRecipes.map((recipe) => {
-      const { rating, ratingCount } = getRecipeRating ? getRecipeRating(recipe._id) : { rating: 0, ratingCount: 0 };
+    return publicThirdPartyRecipes.map((recipe) => {
+      const { rating, ratingCount } = getRecipeRating
+        ? getRecipeRating(recipe._id)
+        : { rating: 0, ratingCount: 0 };
       return { ...recipe, rating, ratingCount };
     });
-  }, [publicRecipes, getRecipeRating]);
+  }, [publicThirdPartyRecipes, getRecipeRating]);
 
-  const filteredRecipes = recipesWithRatings.filter((recipe) => {
-    const term = searchTerm.toLowerCase().trim();
-    const matchTitle = recipe.title?.toLowerCase().includes(term);
-    const matchDescription = recipe.description?.toLowerCase().includes(term);
-    const matchIngredients = recipe.ingredients?.some((ing) => ing.toLowerCase().includes(term));
-    const matchRestrictions = recipe.restrictions?.some((res) => res.toLowerCase().includes(term));
-
-    const matchesSearch = !term || matchTitle || matchDescription || matchIngredients || matchRestrictions;
-    const matchesCategory = category === 'Todas' || recipe.category === category;
-    const matchesVegetarian = !isVegetarian || recipe.isVegetarian;
-    const matchesVegan = !isVegan || recipe.isVegan;
-    const matchesLactoseFree = !isLactoseFree || recipe.isLactoseFree;
-    const matchesGlutenFree = !isGlutenFree || recipe.isGlutenFree;
-
-    return (
-      matchesSearch &&
-      matchesCategory &&
-      matchesVegetarian &&
-      matchesVegan &&
-      matchesLactoseFree &&
-      matchesGlutenFree
-    );
-  });
-
-  const sortedRecipes = [...filteredRecipes].sort((a, b) => {
-    switch (sortBy) {
-      case 'title-asc':
-        return a.title.localeCompare(b.title);
-      case 'title-desc':
-        return b.title.localeCompare(a.title);
-      case 'rating-desc':
-        return (b.rating || 0) - (a.rating || 0);
-      case 'rating-asc':
-        return (a.rating || 0) - (b.rating || 0);
-      default:
-        return 0;
-    }
-  });
-
-  if (loading) {
-    return (
-      <div className="recipes-page-container main-container">
-        <p style={{ textAlign: 'center', padding: '40px 0' }}>Carregando receitas...</p>
-      </div>
-    );
-  }
+  // 3. Ordenação
+  const sortedRecipes = useMemo(() => {
+    return [...recipesWithRatings].sort((a, b) => {
+      switch (sortBy) {
+        case 'title-asc':
+          return a.title.localeCompare(b.title);
+        case 'title-desc':
+          return b.title.localeCompare(a.title);
+        case 'rating-desc':
+          return (b.rating || 0) - (a.rating || 0);
+        case 'rating-asc':
+          return (a.rating || 0) - (b.rating || 0);
+        default:
+          return 0;
+      }
+    });
+  }, [recipesWithRatings, sortBy]);
 
   return (
     <div className="recipes-page-container main-container">
@@ -124,11 +135,11 @@ export default function RecipeExplorer() {
           />
           <select
             value={category}
-            onChange={(e) => handleFilterChange('category',e.target.value)}
+            onChange={(e) => handleFilterChange('category', e.target.value)}
             className="filter-select"
           >
-            <option value="Todas">Todas as Dificuldades</option>
-            {categoriesList.map((cat) => (
+            <option value="Todas">Todas as Opções</option>
+            {DIFFICULTY.map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
               </option>
@@ -184,25 +195,22 @@ export default function RecipeExplorer() {
       </div>
 
       {/* Grade de Receitas */}
-      {sortedRecipes.length === 0 ? (
+      {loading || isInitialLoad ? (
+        <p style={{ textAlign: 'center', padding: '40px 0' }}>A carregar receitas...</p>
+      ) : sortedRecipes.length === 0 ? (
         <p style={{ color: '#5D5D5D', textAlign: 'center', padding: '40px 0' }}>
           Nenhuma receita encontrada com os filtros selecionados.
         </p>
       ) : (
         <div className="recipes-grid">
           {sortedRecipes.map((recipe) => {
-            const authorId = recipe.author?._id || recipe.author;
-            const isMine = String(authorId) === String(user?.id);
             const isFav = favorites?.includes(recipe._id);
             const authorName = recipe.author?.name
-              ? `${recipe.author.name} ${recipe.author.lastName || ''}`
+              ? `${recipe.author.name} ${recipe.author.lastName || ''}`.trim()
               : 'Autor Comunitário';
 
             return (
-              <div
-                key={recipe._id}
-                className={`recipe-card ${isMine ? 'own-recipe' : 'third-party-recipe'}`}
-              >
+              <div key={recipe._id} className="recipe-card third-party-recipe">
                 <div className="recipe-card-image-wrapper">
                   <img
                     src={recipe.img || 'https://via.placeholder.com/300x150?text=Sem+Imagem'}
@@ -232,7 +240,7 @@ export default function RecipeExplorer() {
 
                     <div className="recipe-card-meta">
                       <div className="meta-info">
-                        <span>⏱️ {recipe.prepTime || 'N/A'}</span>
+                        <span>⏱️ {recipe.prepTime || recipe.prepareTime || 'N/A'}</span>
                         <span>🍽️ {recipe.servings || '1 porção'}</span>
                       </div>
                       <span className="meta-author" title={authorName}>
@@ -241,10 +249,20 @@ export default function RecipeExplorer() {
                     </div>
                   </div>
 
-                  <div className="recipe-card-actions">
-                    <Link to={`/recipe/${recipe._id}`} className="btn-view">
+                  <div className="recipe-card-actions" style={{ display: 'flex', gap: '8px' }}>
+                    <Link to={`/recipe/${recipe._id}`} className="btn-view" style={{ flex: 1, textAlign: 'center' }}>
                       Ver Detalhes
                     </Link>
+
+                    {/* Excluir de terceiros visível apenas para o ADMIN */}
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleDelete(recipe._id)}
+                        className="btn-delete"
+                      >
+                        Excluir
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
