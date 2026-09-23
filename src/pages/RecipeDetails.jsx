@@ -7,6 +7,8 @@ import { useFavorites } from '../context/FavoritesContext';
 import { useRecipes } from '../context/RecipesContext';
 
 import RecipeComments from '../components/RecipeComments';
+
+import defaultIMG from '../assets/praTudo-placeholder.svg'
 import '../styles/RecipeDetails.css';
 import '../styles/index.css';
 
@@ -136,7 +138,7 @@ export default function RecipeDetails() {
         )}
 
         <img
-          src={recipe.img || 'https://via.placeholder.com/800x350'}
+          src={recipe.img || defaultIMG}
           alt={recipe.title}
           className="recipe-details-image"
         />

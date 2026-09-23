@@ -21,6 +21,8 @@ import NotFound from './pages/NotFound';
 import EditProfile from './pages/EditProfile';
 import AdminEditUser from './pages/AdminEditUser';
 import MyComments from './pages/MyComments';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 export default function App() {
   return (
@@ -38,6 +40,8 @@ export default function App() {
           <Route element={<GuestRoute />}>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
           </Route>
 
           {/* ROTAS PROTEGIDAS (Apenas Logados) */}

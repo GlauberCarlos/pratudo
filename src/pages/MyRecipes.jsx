@@ -7,6 +7,7 @@ import { useFavorites } from '../context/FavoritesContext';
 import { useRatings } from '../context/RatingsContext';
 import { useRecipes } from '../context/RecipesContext';
 
+import defaultIMG from '../assets/praTudo-placeholder.svg'
 import '../styles/RecipeList.css';
 import '../styles/index.css';
 
@@ -244,7 +245,7 @@ export default function MyRecipes() {
               >
                 <div className="recipe-card-image-wrapper">
                   <img
-                    src={recipe.img || 'https://via.placeholder.com/300x150'}
+                    src={recipe.img || defaultIMG}
                     alt={recipe.title}
                     className="recipe-card-image"
                   />

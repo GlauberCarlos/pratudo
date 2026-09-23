@@ -30,6 +30,8 @@ export default function Login() {
     <div className="auth-container">
       <h2 className="auth-title">Fazer login</h2>
 
+      {errorMsg && <p style={{ color: 'red', textAlign: 'center' }}>{errorMsg}</p>}
+
       <form onSubmit={handleSubmit} className="auth-form">
         <div className="auth-field">
           <label className="auth-label">E-mail</label>
@@ -57,6 +59,13 @@ export default function Login() {
         <button type="submit" className="btn-auth-submit">
           Entrar
         </button>
+
+        {/* Link Esqueceu a Senha */}
+        <div className="auth-footer">
+          <Link to="/forgot-password" className="auth-link">
+            Esqueceu a senha?
+          </Link>
+        </div>
       </form>
 
       <p className="auth-footer">

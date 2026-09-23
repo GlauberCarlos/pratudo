@@ -18,12 +18,6 @@ export default function Footer() {
           <span className="footer-tagline">Seu planejador de receitas e cardápio semanal.</span>
         </div>
 
-        {/* LINKS RÁPIDOS */}
-        <nav className="footer-nav">
-          <Link to="/" className="footer-link">Página Inicial</Link>
-          <Link to="/menu" className="footer-link">Cardápio Semanal</Link>
-        </nav>
-
         {/* DIREITOS AUTORAIS */}
         <div className="footer-copyright">
           © {currentYear} PraTudo. Todos os direitos reservados.

@@ -2,7 +2,6 @@ import { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import { AuthContext } from '../context/AuthContext';
-
 import api from '../services/api';
 
 import '../styles/Auth.css';
@@ -16,11 +15,30 @@ export default function AdminEditUser() {
   const [name, setName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [role, setRole] = useState('user');
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    return date.toISOString().split('T')[0];
+  };
+
+  const validateAge = (dateString) => {
+    const today = new Date();
+    const birth = new Date(dateString);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age >= 16;
+  };
 
   useEffect(() => {
     const currentUserId = currentUser?._id || currentUser?.id;
@@ -39,6 +57,7 @@ export default function AdminEditUser() {
         setName(user.name || '');
         setLastName(user.lastName || '');
         setEmail(user.email || '');
+        setBirthDate(formatDateForInput(user.birthDate));
         setRole(user.role || 'user');
       } catch (error) {
         setErrorMsg(error.response?.data?.message || 'Erro ao carregar dados do utilizador.');
@@ -48,23 +67,34 @@ export default function AdminEditUser() {
     };
 
     fetchUserData();
-  }, [id], currentUser, navigate);
+  }, [id, currentUser, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
 
+    // Validações 
+    if (name.trim().length <= 2) {
+      setErrorMsg('O Nome deve ter mais de 2 caracteres.');
+      return;
+    }
+    if (lastName.trim().length <= 2) {
+      setErrorMsg('O Apelido deve ter mais de 2 caracteres.');
+      return;
+    }
+    if (!birthDate || !validateAge(birthDate)) {
+      setErrorMsg('O utilizador deve ter pelo menos 16 anos.');
+      return;
+    }
+
     try {
-      // Atualiza os dados no backend
-      const response = await api.put(`/admin/users/${id}`, {
+      await api.put(`/admin/users/${id}`, {
         name,
         lastName,
-        email,
+        birthDate,
         role,
       });
-      const updatedUser = response.data;
-      localStorage.setItem('@Pratudo:user', JSON.stringify(updatedUser));
 
       setSuccessMsg('Utilizador atualizado com sucesso!');
       setTimeout(() => {
@@ -86,6 +116,7 @@ export default function AdminEditUser() {
   return (
     <div className="auth-container">
       <h2 className="auth-title">Editar Utilizador</h2>
+      <p className="auth-email">{email}</p>
 
       {errorMsg && <p style={{ color: 'red', textAlign: 'center' }}>{errorMsg}</p>}
       {successMsg && <p style={{ color: 'green', textAlign: 'center' }}>{successMsg}</p>}
@@ -114,11 +145,11 @@ export default function AdminEditUser() {
         </div>
 
         <div className="auth-field">
-          <label className="auth-label">E-mail</label>
+          <label className="auth-label">Data de Nascimento</label>
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="date"
+            value={birthDate}
+            onChange={(e) => setBirthDate(e.target.value)}
             required
             className="auth-input"
           />

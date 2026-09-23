@@ -7,7 +7,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Restaura a sessão ao recarregar a página
   useEffect(() => {
     const storedUser = localStorage.getItem('@Pratudo:user');
     const storedToken = localStorage.getItem('@Pratudo:token');
@@ -18,6 +17,19 @@ export function AuthProvider({ children }) {
 
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const SESSION_TIMEOUT = 60 * 60 * 1000; 
+
+    const timer = setTimeout(() => {
+      alert('Sua sessão expirou por tempo de utilização. Por favor, faça login novamente.');
+      logout();
+    }, SESSION_TIMEOUT);
+
+    return () => clearTimeout(timer);
+  }, [user]);
 
   const login = async (email, password) => {
     try {
@@ -37,12 +49,13 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const register = async (name, lastName, email, password, requestAdmin) => {
+  const register = async (name, lastName, email, birthdate, password, requestAdmin) => {
     try {
       await api.post('/auth/register', {
         name,
         lastName,
         email,
+        birthdate,
         password,
         role: requestAdmin ? 'admin_pending' : 'user',
       });
@@ -61,7 +74,6 @@ export function AuthProvider({ children }) {
       const response = await api.put('/auth/profile', userData);
       const updatedUser = response.data;
 
-      // Atualiza o localStorage e o estado com os dados novos
       localStorage.setItem('@Pratudo:user', JSON.stringify(updatedUser));
       setUser(updatedUser);
 
@@ -83,7 +95,7 @@ export function AuthProvider({ children }) {
   const deleteAccount = async () => {
     try {
       await api.delete('/auth/profile');
-      logout(); // Limpa token e dados do usuário do estado/storage
+      logout();
       return { success: true };
     } catch (error) {
       return {
@@ -104,7 +116,7 @@ export function AuthProvider({ children }) {
         register,
         updateProfile,
         logout,
-        deleteAccount
+        deleteAccount,
       }}
     >
       {!loading && children}

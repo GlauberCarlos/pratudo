@@ -5,6 +5,8 @@ import { useRecipes } from '../context/RecipesContext';
 import { useFavorites } from '../context/FavoritesContext';
 import api from '../services/api';
 
+import defaultIMG from '../assets/praTudo-placeholder.svg'
+import weekIMG from '../assets/praTudo-week.svg'
 import '../styles/RecipeWeek.css';
 import '../styles/index.css';
 
@@ -366,7 +368,7 @@ export default function RecipeWeek() {
                       <div>
                         <div className="recipe-week-img-wrapper">
                           <img
-                            src={recipe.img || 'https://via.placeholder.com/300x130?text=Sem+Imagem'}
+                            src={recipe.img || defaultIMG}
                             alt={recipe.title}
                             className="recipe-week-card-img"
                           />
@@ -405,7 +407,13 @@ export default function RecipeWeek() {
                     </>
                   ) : (
                     <div className="recipe-week-card-empty">
-                      <p className="recipe-week-card-recipe-title">Sem receita selecionada</p>
+                      <div className="recipe-week-img-wrapper">
+                        <img
+                          src={weekIMG}
+                          className="recipe-week-card-img"
+                        />
+                      </div>
+                      <p className="recipe-week-card-recipe-title">Dia sem receita</p>
                       <div className="recipe-week-empty-actions">
                         <button
                           onClick={() => setModalDayKey(day.key)}
@@ -467,7 +475,7 @@ export default function RecipeWeek() {
                   return (
                     <div key={recId} className="recipe-week-modal-item">
                       <img
-                        src={r.img || 'https://via.placeholder.com/50'}
+                        src={r.img || defaultIMG}
                         alt={r.title}
                         className="recipe-week-modal-item-img"
                       />

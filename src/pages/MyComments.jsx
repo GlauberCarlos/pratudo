@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import api from '../services/api';
 
+import defaultIMG from '../assets/praTudo-placeholder.svg'
 import '../styles/MyComments.css';
 import '../styles/index.css';
 
@@ -63,7 +64,7 @@ export default function MyComments() {
                 {/* Imagem da receita */}
                 <div className="comment-card-image-wrapper">
                   <img
-                    src={recipe?.img || '/placeholder-recipe.jpg'}
+                    src={recipe?.img || defaultIMG}
                     alt={recipe?.title || 'Receita'}
                     className="comment-card-image"
                   />

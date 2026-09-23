@@ -8,6 +8,12 @@ export default function Profile() {
   const { user, logout, deleteAccount } = useAuth();
   const navigate = useNavigate();
 
+  const data = new Date(user?.birthDate);
+  const dia = String(data.getUTCDate()).padStart(2, '0');
+  const mes = String(data.getUTCMonth() + 1).padStart(2, '0'); 
+  const ano = data.getUTCFullYear();
+  const bDate = `${dia}/${mes}/${ano}`;
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -43,9 +49,6 @@ export default function Profile() {
         <div className="profile-avatar">{initialLetter}</div>
         <div className="profile-title-box">
           <h2>Meu Perfil</h2>
-          <span className="profile-role-badge">
-            {user?.isAdmin ? 'Administrador' : 'Membro'}
-          </span>
         </div>
       </div>
 
@@ -53,22 +56,26 @@ export default function Profile() {
       <div className="profile-info-group">
         <div className="profile-info-item">
           <span className="profile-info-label">Nome:</span>
-          <span className="profile-info-value">{user?.name || 'Não informado'}</span>
+          <span className="profile-info-value">{user?.name}</span>
         </div>
         <div className="profile-info-item">
           <span className="profile-info-label">Apelido:</span>
-          <span className="profile-info-value">{user?.lastName || 'Não informado'}</span>
+          <span className="profile-info-value">{user?.lastName}</span>
         </div>
         <div className="profile-info-item">
           <span className="profile-info-label">E-mail:</span>
-          <span className="profile-info-value">{user?.email || 'Não informado'}</span>
+          <span className="profile-info-value">{user?.email}</span>
+        </div>
+        <div className="profile-info-item">
+          <span className="profile-info-label">Data de Nascimento:</span>
+          <span className="profile-info-value">{bDate}</span>
         </div>
       </div>
 
       {/* Botões de Edição (Futuras Funcionalidades) */}
       <div className="profile-actions-section">
-        <Link to="/my-comments" className="btn-profile-option">
-          Meus Comentários
+        <Link to="/my-comments" className="btn-profile-comment">
+          💬 Meus Comentários
         </Link>
         <button
           className="btn-profile-action"

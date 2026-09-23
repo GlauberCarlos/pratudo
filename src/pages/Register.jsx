@@ -10,28 +10,63 @@ export default function Register() {
   const [name, setName] = useState('');
   const [lastName, setlastName] = useState('');
   const [email, setEmail] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [requestAdmin, setRequestAdmin] = useState(false);
   const { register } = useContext(AuthContext);
-  const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
+
+  const validadeAge = (dateString) => {
+    const today = new Date();
+    const birthDate = new Date(dateString);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age >= 16;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMsg('');
 
+    if (name.trim().length <= 2) {
+      alert('O Nome deve ter mais de 2 caracteres.');
+      return;
+    }
+    if (lastName.trim().length <= 2) {
+      alert('O Apelido deve ter mais de 2 caracteres.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      alert('Por favor, insira um e-mail válido.');
+      return;
+    }
+    if (!birthDate || !validadeAge(birthDate)) {
+      alert('Deve ter pelo menos 16 anos para se registar.');
+      return;
+    }
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      alert(
+        'A senha deve ter no mínimo 8 caracteres, incluindo 1 letra maiúscula, 1 minúscula, 1 número e 1 caractere especial (@$!%*?&).'
+      );
+      return;
+    }
     if (password !== confirmPassword) {
       alert('As senhas não coincidem!');
       return;
     }
 
-    const result = await register(name, lastName, email, password, requestAdmin);
+    const result = await register(name, lastName, email, birthDate, password, requestAdmin);
     if (result.success) {
       alert('Cadastro realizado com sucesso!');
       navigate('/login');
     } else {
-      setErrorMsg(result.message);
+      alert(result.message);
     }
   };
 
@@ -71,6 +106,17 @@ export default function Register() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="seuemail@email.com"
+            required
+            className="auth-input"
+          />
+        </div>
+
+        <div className="auth-field">
+          <label className="auth-label">Data de Nascimento</label>
+          <input
+            type="date"
+            value={birthDate}
+            onChange={(e) => setBirthDate(e.target.value)}
             required
             className="auth-input"
           />

@@ -52,7 +52,7 @@ export default function RecipeNew() {
       title,
       description,
       category,
-      img: img.trim() || 'https://via.placeholder.com/300x200?text=Sem+Imagem',
+      img: img.trim() || "",
       prepTime: `${prepTime} min`,
       servings: `${servings} porções`,
       ingredients: ingredientsArray,

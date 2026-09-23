@@ -20,6 +20,12 @@
   margin-bottom: 24px;
 }
 
+.auth-email {
+  color: #5D5D5D;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
 .auth-form {
   display: flex;
   flex-direction: column;
