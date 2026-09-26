@@ -1,10 +1,9 @@
-/* Header Base */
 .header {
-  background-color: #5D5D5D; /* Cinza-1 */
-  height: 80px; /* Mais alto conforme solicitado */
+  background-color: var(--cinza1); 
+  height: 80px;
   width: 100%;
   position: relative;
-  z-index: 100; /* Garante que o logo sobreponha o conteúdo abaixo */
+  z-index: 100;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
 }
 
@@ -18,7 +17,6 @@
   justify-content: space-between;
 }
 
-/* Logo Vazado */
 .header-logo-wrapper {
   height: 100%;
   display: flex;
@@ -27,12 +25,12 @@
 }
 
 .header-logo {
-  height: 110px; /* Tamanho do SVG */
+  height: 110px;
   width: auto;
   position: absolute;
-  top: 15px; /* Empurra o logo para baixo vazando a borda inferior */
+  top: 15px; 
   left: 0;
-  filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.2)); /* Sombra suave para destacar o logo vazado */
+  filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.2)); 
   transition: transform 0.2s ease;
 }
 
@@ -40,7 +38,6 @@
   transform: scale(1.03);
 }
 
-/* Navegação Central */
 .header-nav {
   display: flex;
   align-items: center;
@@ -48,7 +45,7 @@
 }
 
 .nav-link {
-  color: #FAFAFA; /* Branco-1 */
+  color: var(--cinza2); 
   text-decoration: none;
   font-weight: 500;
   font-size: 16px;
@@ -58,16 +55,14 @@
 }
 
 .nav-link:hover {
-  color: #FFA726; /* Laranja-1 no Hover */
+  color: var(--laranja1); 
 }
 
-/* Página Ativa */
 .nav-link.active {
-  color: #FFA726; /* Laranja-1 */
+  color: var(--laranja1); 
   font-weight: 700;
 }
 
-/* Traço discreto sob a aba ativa */
 .nav-link.active::after {
   content: '';
   position: absolute;
@@ -75,11 +70,10 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background-color: #FFA726;
+  background-color: var(--laranja1);
   border-radius: 2px;
 }
 
-/* Área do Usuário */
 .header-user {
   display: flex;
   align-items: center;
@@ -87,26 +81,25 @@
 }
 
 .user-greeting {
-  color: #FAFAFA; /* Branco-1 */
+  color: var(--cinza2); 
   font-size: 15px;
 }
 
 .user-profile-link {
-  color: #FAFAFA;
+  color: var(--cinza2);
   text-decoration: underline;
   font-weight: 600;
   transition: color 0.2s ease;
 }
 
 .user-profile-link:hover {
-  color: #FFA726;
+  color: var(--laranja1);
 }
 
-/* Botão Sair sem moldura/caixa */
 .logout-btn {
   background: none;
   border: none;
-  color: #FAFAFA; /* Branco-1 */
+  color: var(--cinza2); 
   font-size: 15px;
   font-weight: 500;
   cursor: pointer;
@@ -115,10 +108,9 @@
 }
 
 .logout-btn:hover {
-  color: #FFA726; /* Laranja-1 no Hover */
+  color: var(--laranja1); 
 }
 
-/* Links de Autenticação */
 .auth-links {
   display: flex;
   gap: 15px;

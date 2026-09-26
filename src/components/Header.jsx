@@ -16,14 +16,12 @@ export default function Header() {
     <header className="header">
       <div className="header-container">
         
-        {/* LOGO (Com efeito "vazado") */}
         <div className="header-logo-wrapper">
           <Link to="/">
             <img src={logoSvg} alt="PraTudo Logo" className="header-logo" />
           </Link>
         </div>
 
-        {/* NAVEGAÇÃO CENTRAL */}
         <nav className="header-nav">
           <NavLink to="/" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
             Início
@@ -51,7 +49,6 @@ export default function Header() {
           )}
         </nav>
 
-        {/* ÁREA DO USUÁRIO (DIREITA) */}
         <div className="header-user">
           {isLoggedIn ? (
             <>

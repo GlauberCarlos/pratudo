@@ -1,9 +1,8 @@
-/* Footer Base */
 .footer {
-  background-color: #5D5D5D; /* Cinza-1 */
-  color: #FAFAFA; /* Branco-1 */
-  padding: 16px 0; /* Mais fino */
-  margin-top: auto; /* Garante que o footer fique no rodapé da tela */
+  background-color: var(--cinza1); 
+  color: var(--cinza2); 
+  padding: 16px 0; 
+  margin-top: auto; 
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -18,7 +17,6 @@
   gap: 15px;
 }
 
-/* Marca / Logo */
 .footer-brand {
   display: flex;
   align-items: center;
@@ -33,52 +31,31 @@
 }
 
 .footer-logo {
-  height: 28px; /* Versão pequena do logo */
+  height: 28px; 
   width: auto;
   object-fit: contain;
 }
 
 .footer-brand-title {
-  color: #FAFAFA; /* Branco-1 */
+  color: var(--cinza2); 
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.5px;
 }
 
 .footer-tagline {
-  color: #E5E5E5; /* Cinza-2 */
+  color: var(--cinza3); 
   font-size: 13px;
-  border-left: 1px solid #E5E5E5;
+  border-left: 1px solid var(--cinza3);
   padding-left: 12px;
   margin-left: 4px;
 }
 
-/* Links de Navegação */
-.footer-nav {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.footer-link {
-  color: #FAFAFA; /* Branco-1 */
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-.footer-link:hover {
-  color: #FFA726; /* Laranja-1 no hover */
-}
-
-/* Copyright */
 .footer-copyright {
-  color: #E5E5E5; /* Cinza-2 */
+  color: var(--cinza3); 
   font-size: 12px;
 }
 
-/* Responsividade Básica (Telas menores/Celular) */
 @media (max-width: 768px) {
   .footer-container {
     flex-direction: column;

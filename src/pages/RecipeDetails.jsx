@@ -8,6 +8,8 @@ import { useRecipes } from '../context/RecipesContext';
 
 import RecipeComments from '../components/RecipeComments';
 
+import { toast } from 'sonner';
+
 import defaultIMG from '../assets/praTudo-placeholder.svg'
 import '../styles/RecipeDetails.css';
 import '../styles/index.css';
@@ -60,12 +62,10 @@ export default function RecipeDetails() {
     );
   }
 
-  // Identificadores
   const recipeId = recipe._id || recipe.id;
   const currentUserId = user?._id || user?.id;
   const authorId = recipe.userId || recipe.author?._id || recipe.author;
 
-  // Permissões
   const isOwner = Boolean(currentUserId && authorId && String(currentUserId) === String(authorId));
   const isAdmin = user?.role === 'admin';
   const canDelete = isOwner || isAdmin;
@@ -88,7 +88,7 @@ export default function RecipeDetails() {
 
     const result = await deleteRecipe(recipeId);
     if (result?.success || result) {
-      alert("Receita eliminada com sucesso!");
+      toast.success("Receita eliminada com sucesso!");
       navigate('/my-recipes');
     } else {
       alert(result?.message || "Erro ao eliminar a receita.");
@@ -99,23 +99,19 @@ export default function RecipeDetails() {
 
   return (
     <div className="recipe-details-container">
-      {/* Barra de Topo */}
       <div className="recipe-details-top-bar">
         <button onClick={() => navigate(-1)} className="btn-back">
           Voltar
         </button>
 
-        {/* Botões de Ação */}
         {(isOwner || canDelete) && (
           <div style={{ display: 'flex', gap: '10px' }}>
-            {/* Apenas o DONO/AUTOR pode editar */}
             {isOwner && (
               <Link to={`/recipe/edit/${recipeId}`} className="btn-edit-recipe">
                 Editar Receita
               </Link>
             )}
 
-            {/* DONO OU ADMIN podem eliminar */}
             {canDelete && (
               <button onClick={handleDelete} className="btn-delete-recipe">
                 Eliminar
@@ -125,7 +121,6 @@ export default function RecipeDetails() {
         )}
       </div>
 
-      {/* Imagem */}
       <div className="recipe-details-image-wrapper">
         {user && (
           <button
@@ -144,21 +139,19 @@ export default function RecipeDetails() {
         />
       </div>
 
-      {/* Cabeçalho */}
       <div className="recipe-details-header">
         <h1 className="recipe-details-title">{recipe.title}</h1>
         {recipe.description && (
           <p className="recipe-details-description">{recipe.description}</p>
         )}
         <div className="recipe-author">
-          Autor: <span className="recipe-author-badge">{recipe.author?.name}</span>
+          Receita de: <span className="recipe-author-badge">{recipe.author?.name}</span>
         </div>
         <div className="recipe-category">
           Dificuldade: <span className="recipe-category-badge">{recipe.category}</span>
         </div>
       </div>
 
-      {/* Metadados */}
       <div className="recipe-meta-box">
         <div className="recipe-meta-item">
           <span className="meta-label">Tempo de Preparo</span>
@@ -178,7 +171,6 @@ export default function RecipeDetails() {
         </div>
       </div>
 
-      {/* Tags */}
       <div className="recipe-tags-container">
         {recipe.isVegetarian && <span className="tag-badge tag-veg">🌱 Vegetariano</span>}
         {recipe.isVegan && <span className="tag-badge tag-vegan">🌿 Vegano</span>}
@@ -196,7 +188,6 @@ export default function RecipeDetails() {
 
       <hr className="recipe-divider" />
 
-      {/* Ingredientes */}
       <section className="recipe-section">
         <h3 className="recipe-section-title">Ingredientes</h3>
         {recipe.ingredients && recipe.ingredients.length > 0 ? (
@@ -213,7 +204,6 @@ export default function RecipeDetails() {
         )}
       </section>
 
-      {/* Modo de Preparo */}
       <section className="recipe-section">
         <h3 className="recipe-section-title">Modo de Preparo</h3>
         {recipe.instructions && recipe.instructions.length > 0 ? (
@@ -230,7 +220,6 @@ export default function RecipeDetails() {
         )}
       </section>
 
-      {/* Avaliação e Comentários */}
       {user && (
         <section className="recipe-rating-section">
           <h4 className="rating-section-title">Avalie esta receita</h4>

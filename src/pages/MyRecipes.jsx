@@ -1,4 +1,3 @@
-//myrecipes
 import { useState, useMemo, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
@@ -6,6 +5,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useFavorites } from '../context/FavoritesContext';
 import { useRatings } from '../context/RatingsContext';
 import { useRecipes } from '../context/RecipesContext';
+
+import { toast } from 'sonner';
 
 import defaultIMG from '../assets/praTudo-placeholder.svg'
 import '../styles/RecipeList.css';
@@ -113,13 +114,24 @@ export default function MyRecipes() {
     });
   }, [filteredRecipes, sortBy]);
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir esta receita?')) {
-      const result = await deleteRecipe(id);
-      if (!result?.success && result?.message) {
-        alert(result.message);
-      }
-    }
+  const handleDelete = (id) => {
+    toast('Tem certeza que deseja apagar esta receita?', {
+      action: {
+        label: 'Sim',
+        onClick: async () => {
+          const result = await deleteRecipe(id);
+          if (!result?.success && result?.message) {
+            toast.error(result.message);
+          } else if (result?.success) {
+            toast.success('Receita apagada com sucesso!');
+          }
+        },
+      },
+      cancel: {
+        label: 'Não',
+        onClick: () => { },
+      },
+    });
   };
 
   return (
@@ -129,6 +141,9 @@ export default function MyRecipes() {
         <Link to="/recipe/new" className="btn-add-recipe">
           + Nova Receita
         </Link>
+      </div>
+      <div className="recipes-header-subtitle">
+        Usa estas receitas no seu Cardápio Semanal!
       </div>
 
       <div className="recipes-filter-panel">
@@ -217,7 +232,7 @@ export default function MyRecipes() {
       {loading ? (
         <p style={{ textAlign: 'center', padding: '40px 0' }}>A carregar a sua coleção...</p>
       ) : sortedRecipes.length === 0 ? (
-        <p style={{ color: '#5D5D5D', textAlign: 'center', padding: '40px 0' }}>
+        <p style={{ color: 'var(--cinza1)', textAlign: 'center', padding: '40px 0' }}>
           Nenhuma receita encontrada com os filtros selecionados.
         </p>
       ) : (
@@ -254,7 +269,7 @@ export default function MyRecipes() {
                     className="favorite-btn-overlay"
                     title={isFav ? 'Remover dos Favoritos' : 'Favoritar'}
                   >
-                    {isFav ? '❤️' : '🤍'}
+                    {isFav ? '🧡' : '🤍'} 
                   </button>
                 </div>
 
@@ -271,7 +286,7 @@ export default function MyRecipes() {
                     <div className="recipe-card-meta">
                       <div className="meta-info">
                         <span>⏱️ {prepTimeDisplay}</span>
-                        <span>🍽️ {recipe.servings || '1 porção'}</span>
+                        <span>🍽️ {recipe.servings}</span>
                       </div>
                       <span className="meta-author" title={authorName}>
                         👤 {authorName}
@@ -279,20 +294,17 @@ export default function MyRecipes() {
                     </div>
                   </div>
 
-                  {/* Ações */}
                   <div className="recipe-card-actions">
                     <Link to={`/recipe/${recipeId}`} className="btn-view">
                       {isMine ? 'Ver' : 'Ver Detalhes'}
                     </Link>
 
-                    {/* Editar visível APENAS para o dono */}
                     {isMine && (
                       <Link to={`/recipe/edit/${recipeId}`} className="btn-edit">
                         Editar
                       </Link>
                     )}
 
-                    {/* Excluir visível para o dono OU para o Admin */}
                     {canDelete && (
                       <button
                         onClick={() => handleDelete(recipeId)}

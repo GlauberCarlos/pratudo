@@ -1,5 +1,6 @@
 // App
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster, toast } from 'sonner';
 
 import MainLayout from './components/MainLayout';
 import PrivateRoute from './components/PrivateRoute';
@@ -27,16 +28,37 @@ import ResetPassword from './pages/ResetPassword';
 export default function App() {
   return (
     <BrowserRouter>
+      <Toaster position="top-right"
+        richColors
+        expand={true}        
+        toastOptions={{          
+          style: {
+            background: 'var(--branco)',
+            color: 'var(--verde1)',
+            fontSize: '1.2rem',
+            minWidth: '400px',
+            padding: '16px',
+            borderRadius: '12px',
+          },
+          duration: 7000,
+          actionButtonStyle: {
+            backgroundColor: 'var(--vermelho)',
+            color: 'var(--branco)',
+          },
+          cancelButtonStyle: {
+            backgroundColor: 'var(--laranja1)',
+            color: 'var(--branco)',
+          },
+        }} />
       <Routes>
-        {/* Layout Principal com Header e Footer para todas as páginas */}
         <Route element={<MainLayout />}>
-          
-          {/*  ROTAS PÚBLICAS */}
+
+          {/* PÚBLICAS */}
           <Route path="/" element={<Home />} />
           <Route path="/explorer" element={<RecipeExplorer />} />
           <Route path="/recipe/:id" element={<RecipeDetails />} />
 
-          {/* ROTAS APENAS PARA VISITANTES (Não Logados) */}
+          {/* VISITANTES */}
           <Route element={<GuestRoute />}>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -44,7 +66,7 @@ export default function App() {
             <Route path="/reset-password/:token" element={<ResetPassword />} />
           </Route>
 
-          {/* ROTAS PROTEGIDAS (Apenas Logados) */}
+          {/* PROTEGIDAS */}
           <Route element={<PrivateRoute />}>
             <Route path="/profile" element={<Profile />} />
             <Route path="/my-recipes" element={<MyRecipes />} />
@@ -55,7 +77,7 @@ export default function App() {
             <Route path="/my-comments" element={<MyComments />} />
           </Route>
 
-          {/* ROTA ADMIN */}
+          {/* ADMIN */}
           <Route element={<AdminRoute />}>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/users/edit/:id" element={<AdminEditUser />} />

@@ -9,7 +9,6 @@ export default function Footer() {
     <footer className="footer">
       <div className="footer-container">
         
-        {/* LOGO + NOME DA MARCA */}
         <div className="footer-brand">
           <Link to="/" className="footer-brand-link">
             <img src={logoSvg} alt="PraTudo" className="footer-logo" />
@@ -18,7 +17,6 @@ export default function Footer() {
           <span className="footer-tagline">Seu planejador de receitas e cardápio semanal.</span>
         </div>
 
-        {/* DIREITOS AUTORAIS */}
         <div className="footer-copyright">
           © {currentYear} PraTudo. Todos os direitos reservados.
         </div>

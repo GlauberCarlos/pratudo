@@ -1,19 +1,15 @@
-/* ==========================================================================
-   LOGIN & REGISTER (Auth.css)
-   ========================================================================== */
-
 .auth-container {
   max-width: 420px;
   margin: 40px auto;
   padding: 32px 28px;
-  background-color: #FAFAFA;
-  border: 1px solid #E5E5E5;
+  background-color: var(--cinza2);
+  border: 1px solid var(--cinza3);
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
 .auth-title {
-  color: #5D5D5D;
+  color: var(--cinza1);
   font-size: 24px;
   font-weight: 700;
   text-align: center;
@@ -21,7 +17,7 @@
 }
 
 .auth-email {
-  color: #5D5D5D;
+  color: var(--cinza1);
   font-weight: 600;
   margin-bottom: 24px;
 }
@@ -41,24 +37,24 @@
 .auth-label {
   font-size: 14px;
   font-weight: 600;
-  color: #5D5D5D;
+  color: var(--cinza1);
 }
 
 .auth-input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #E5E5E5;
+  border: 1px solid var(--cinza3);
   border-radius: 8px;
   font-size: 14px;
-  color: #5D5D5D;
-  background-color: #FFFFFF;
+  color: var(--cinza1);
+  background-color: var(--branco);
   box-sizing: border-box;
   transition: border-color 0.2s ease;
 }
 
 .auth-input:focus {
   outline: none;
-  border-color: #66BB6A;
+  border-color: var(--verde1);
 }
 
 .auth-checkbox-group {
@@ -70,7 +66,7 @@
 }
 
 .auth-checkbox {
-  accent-color: #66BB6A;
+  accent-color: var(--verde1);
   width: 16px;
   height: 16px;
   cursor: pointer;
@@ -78,15 +74,15 @@
 
 .auth-checkbox-label {
   font-size: 14px;
-  color: #5D5D5D;
+  color: var(--cinza1);
   cursor: pointer;
 }
 
 .btn-auth-submit {
   width: 100%;
   padding: 12px;
-  background-color: #66BB6A;
-  color: #FAFAFA;
+  background-color: var(--verde1);
+  color: var(--cinza2);
   border: none;
   border-radius: 50px;
   font-weight: 700;
@@ -97,7 +93,7 @@
 }
 
 .btn-auth-submit:hover {
-  opacity: 0.9;
+  opacity: 0.5;
 }
 
 .btn-auth-submit:active {
@@ -108,11 +104,11 @@
   margin-top: 24px;
   text-align: center;
   font-size: 14px;
-  color: #888888;
+  color: var(--cinza4);
 }
 
 .auth-link {
-  color: #66BB6A;
+  color: var(--verde1);
   font-weight: 700;
   text-decoration: none;
 }
@@ -130,8 +126,8 @@
 
 .btn-profile-cancel {
   padding: 12px;
-  background-color: #E53935; 
-  color: #FFFFFF;
+  background-color: var(--vermelho); 
+  color: var(--branco);
   border: none;
   border-radius: 50px;
   font-weight: 700;

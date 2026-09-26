@@ -3,7 +3,10 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useRecipes } from '../context/RecipesContext';
 import api from '../services/api';
 
+import { toast } from 'sonner';
+
 import '../styles/RecipeForm.css';
+import '../styles/RecipeDetails.css';
 import '../styles/index.css';
 
 export default function RecipeEdit() {
@@ -17,7 +20,11 @@ export default function RecipeEdit() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Almoço');
-  const [img, setImg] = useState('');
+
+  // ESTADOS DE IMAGEM (IGUAL AO RECIPENEW)
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+
   const [prepTime, setPrepTime] = useState('');
   const [servings, setServings] = useState('');
   const [ingredients, setIngredients] = useState('');
@@ -28,6 +35,7 @@ export default function RecipeEdit() {
   const [isVegan, setIsVegan] = useState(false);
   const [isLactoseFree, setIsLactoseFree] = useState(false);
   const [isGlutenFree, setIsGlutenFree] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Busca a receita da API caso não esteja nos estados globais do contexto
   useEffect(() => {
@@ -54,13 +62,28 @@ export default function RecipeEdit() {
     }
   }, [id, getRecipeById]);
 
+  const parseArrayField = (fieldValue) => {
+    if (!fieldValue) return [];
+    if (Array.isArray(fieldValue)) return fieldValue;
+    if (typeof fieldValue === 'string') {
+      try {
+        const parsed = JSON.parse(fieldValue);
+        return Array.isArray(parsed) ? parseArrayField(parsed) : [fieldValue];
+      } catch (e) {
+        return fieldValue.split(',').map((s) => s.trim());
+      }
+    }
+    return [];
+  };
+
   // Preenche o formulário quando os dados da receita chegam
   useEffect(() => {
     if (recipeToEdit) {
       setTitle(recipeToEdit.title || '');
       setDescription(recipeToEdit.description || '');
       setCategory(recipeToEdit.category || 'Almoço');
-      setImg(recipeToEdit.img || '');
+
+      setImagePreview(recipeToEdit.img || '');
 
       const rawPrep = recipeToEdit.prepTime
         ? String(recipeToEdit.prepTime).replace(/\D/g, '')
@@ -72,21 +95,14 @@ export default function RecipeEdit() {
       setPrepTime(rawPrep);
       setServings(rawServings);
 
-      setIngredients(
-        Array.isArray(recipeToEdit.ingredients)
-          ? recipeToEdit.ingredients.join(', ')
-          : recipeToEdit.ingredients || ''
-      );
-      setInstructions(
-        Array.isArray(recipeToEdit.instructions)
-          ? recipeToEdit.instructions.join('\n')
-          : recipeToEdit.instructions || ''
-      );
-      setRestrictions(
-        Array.isArray(recipeToEdit.restrictions)
-          ? recipeToEdit.restrictions.join(', ')
-          : recipeToEdit.restrictions || ''
-      );
+      // Tratamento seguro contra strings serializadas duplicadas
+      const ingArray = parseArrayField(recipeToEdit.ingredients);
+      const instArray = parseArrayField(recipeToEdit.instructions);
+      const restArray = parseArrayField(recipeToEdit.restrictions);
+
+      setIngredients(ingArray.join(', '));
+      setInstructions(instArray.join('\n'));
+      setRestrictions(restArray.join(', '));
 
       setIsPublic(!!recipeToEdit.isPublic);
       setIsVegetarian(!!recipeToEdit.isVegetarian);
@@ -95,6 +111,28 @@ export default function RecipeEdit() {
       setIsGlutenFree(!!recipeToEdit.isGlutenFree);
     }
   }, [recipeToEdit]);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 3 * 1024 * 1024) {
+        toast.error('A imagem deve ter no máximo 3MB.');
+        return;
+      }
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview('');
+
+    const fileInput = document.getElementById('recipe-img');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
 
   if (fetching) {
     return (
@@ -139,39 +177,75 @@ export default function RecipeEdit() {
       .map((item) => item.trim())
       .filter(Boolean);
 
-    const updatedRecipe = {
-      title,
-      description,
-      category,
-      img: img.trim() || "",
-      prepTime: `${prepTime} min`,
-      servings: `${servings} porções`,
-      ingredients: ingredientsArray,
-      instructions: instructionsArray,
-      restrictions: restrictionsArray,
-      isPublic,
-      isVegetarian,
-      isVegan,
-      isLactoseFree,
-      isGlutenFree,
-    };
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('category', category);
+    formData.append('prepTime', `${prepTime} min`);
+    formData.append('servings', `${servings} porções`);
 
-    const result = await updateRecipe(id, updatedRecipe);
+    formData.append('ingredients', JSON.stringify(ingredientsArray));
+    formData.append('instructions', JSON.stringify(instructionsArray));
+    formData.append('restrictions', JSON.stringify(restrictionsArray));
 
-    if (result?.success || result) {
-      alert('Receita atualizada com sucesso!');
-      navigate('/my-recipes');
+    formData.append('isPublic', isPublic);
+    formData.append('isVegetarian', isVegetarian);
+    formData.append('isVegan', isVegan);
+    formData.append('isLactoseFree', isLactoseFree);
+    formData.append('isGlutenFree', isGlutenFree);
+
+    if (imageFile) {
+      formData.append('img', imageFile);
     } else {
-      alert(result?.message || 'Erro ao atualizar a receita.');
+      formData.append('img', imagePreview || '');
+    }
+
+    try {
+      setLoading(true);
+      const result = await updateRecipe(id, formData);
+
+      if (result?.success || result) {
+        toast.success('Receita atualizada com sucesso!');
+        navigate('/my-recipes');
+      } else {
+        alert(result?.message || 'Erro ao atualizar a receita.');
+      }
+    } catch (error) {
+      alert('Erro inesperado ao atualizar a receita.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="recipe-form-container">
-      <h2 className="recipe-form-title">Editar Receita</h2>
+      <div className="recipe-details-top-bar">
+        <h2 className="recipe-form-title">Editar Receita</h2>
+        <button onClick={() => navigate(-1)} className="btn-back">
+          Voltar
+        </button>
+      </div>
+
+      {imagePreview && (
+        <div className="recipe-image-preview-wrapper">
+          <img
+            src={imagePreview}
+            alt="Pré-visualização"
+            className="recipe-image-preview"
+          />
+          <button
+            type="button"
+            onClick={handleRemoveImage}
+            className="btn-remove-image"
+            title="Remover foto"
+            aria-label="Remover foto"
+          >
+            🗑️
+          </button>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="recipe-form">
-        {/* Título */}
         <div className="form-group">
           <label className="form-label">Título da Receita *</label>
           <input
@@ -183,7 +257,6 @@ export default function RecipeEdit() {
           />
         </div>
 
-        {/* Descrição */}
         <div className="form-group">
           <label className="form-label">Descrição Breve</label>
           <textarea
@@ -194,7 +267,6 @@ export default function RecipeEdit() {
           />
         </div>
 
-        {/* Categoria e Imagem */}
         <div className="form-row">
           <div className="form-group-flex">
             <label className="form-label">Categoria *</label>
@@ -214,17 +286,17 @@ export default function RecipeEdit() {
           </div>
 
           <div className="form-group-flex">
-            <label className="form-label">URL da Imagem</label>
+            <label htmlFor="recipe-img" className="form-label-img">Escolher foto</label>
             <input
-              type="url"
-              value={img}
-              onChange={(e) => setImg(e.target.value)}
-              className="form-input"
+              type="file"
+              id="recipe-img"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="form-label-input"
             />
           </div>
         </div>
 
-        {/* Tempo e Rendimento */}
         <div className="form-row">
           <div className="form-group-flex">
             <label className="form-label">Tempo de Preparo (min) *</label>
@@ -251,7 +323,6 @@ export default function RecipeEdit() {
           </div>
         </div>
 
-        {/* Ingredientes */}
         <div className="form-group">
           <label className="form-label">
             Ingredientes * <span className="form-label-hint">(separados por vírgula)</span>
@@ -265,7 +336,6 @@ export default function RecipeEdit() {
           />
         </div>
 
-        {/* Modo de Preparo */}
         <div className="form-group">
           <label className="form-label">
             Modo de Preparo * <span className="form-label-hint">(separados por ponto ou quebra de linha)</span>
@@ -279,7 +349,6 @@ export default function RecipeEdit() {
           />
         </div>
 
-        {/* Restrições Adicionais */}
         <div className="form-group">
           <label className="form-label">
             Restrições Adicionais <span className="form-label-hint">(separadas por vírgula)</span>
@@ -292,7 +361,6 @@ export default function RecipeEdit() {
           />
         </div>
 
-        {/* Filtros de Dieta */}
         <div className="form-fieldset-diet">
           <strong className="fieldset-title">Filtros de Dieta:</strong>
 
@@ -339,7 +407,6 @@ export default function RecipeEdit() {
           </div>
         </div>
 
-        {/* Visibilidade Pública */}
         <div className="form-box-public">
           <label className="checkbox-label-bold">
             <input
@@ -352,10 +419,9 @@ export default function RecipeEdit() {
           </label>
         </div>
 
-        {/* Botões de Ação */}
         <div className="btns-submit-cancel">
-          <button type="submit" className="btn-submit-recipe">
-            Guardar Alterações
+          <button type="submit" className="btn-submit-recipe" disabled={loading}>
+            {loading ? 'A guardar alterações...' : 'Guardar Alterações'}
           </button>
           <button type="button" className="btn-cancel-recipe" onClick={() => navigate('/my-recipes')}>
             Cancelar

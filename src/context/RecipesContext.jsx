@@ -52,7 +52,6 @@ export const RecipesProvider = ({ children }) => {
     }
   }, []);
 
-  // Busca síncrona na memória
   const getRecipeById = (id) => {
     if (!id) return null;
     return (
@@ -61,7 +60,6 @@ export const RecipesProvider = ({ children }) => {
     );
   };
 
-  // NOVA FUNÇÃO: Busca na memória; se não encontrar, faz pedido à API
   const fetchRecipeById = useCallback(async (id) => {
     if (!id) return null;
 
@@ -71,7 +69,7 @@ export const RecipesProvider = ({ children }) => {
 
     if (localRecipe) return localRecipe;
 
-    // Se não estiver em memória (ex: após refresh), busca no servidor
+    // Se não estiver em memória
     try {
       const response = await api.get(`/recipes/${id}`);
       return response.data;
@@ -83,11 +81,12 @@ export const RecipesProvider = ({ children }) => {
 
   const addRecipe = async (recipeData) => {
     try {
-      const response = await api.post('/recipes', recipeData);
+      const response = await api.post('/recipes', recipeData, {headers: recipeData instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {},
+    });
       const newRec = response.data.recipe;
       setRecipes((prev) => [newRec, ...prev]);
       setMyRecipes((prev) => [newRec, ...prev]);
-      return { success: true, recipe: newRec };
+      return { success: true, data: response.data };
     } catch (error) {
       return {
         success: false,

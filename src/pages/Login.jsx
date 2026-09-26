@@ -1,7 +1,8 @@
-//login
 import { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+
+import { toast } from 'sonner';
 
 import '../styles/Auth.css';
 import '../styles/index.css';
@@ -22,7 +23,7 @@ export default function Login() {
     if (result.success) {
       navigate('/my-recipes');
     } else {
-      setErrorMsg(result.message);
+      toast.error(result.message);
     }
   };
 
@@ -60,7 +61,6 @@ export default function Login() {
           Entrar
         </button>
 
-        {/* Link Esqueceu a Senha */}
         <div className="auth-footer">
           <Link to="/forgot-password" className="auth-link">
             Esqueceu a senha?

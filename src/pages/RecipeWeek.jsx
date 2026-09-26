@@ -5,6 +5,8 @@ import { useRecipes } from '../context/RecipesContext';
 import { useFavorites } from '../context/FavoritesContext';
 import api from '../services/api';
 
+import { toast } from 'sonner';
+
 import defaultIMG from '../assets/praTudo-placeholder.svg'
 import weekIMG from '../assets/praTudo-week.svg'
 import '../styles/RecipeWeek.css';
@@ -39,16 +41,13 @@ export default function RecipeWeek() {
 
   const currentUserId = user?._id || user?.id;
 
-  // Carrega do localStorage no exato momento da montagem dos estados
   const savedStorage = useMemo(() => getSavedStorage(currentUserId), [currentUserId]);
 
-  // Carrega as receitas do utilizador e as públicas
   useEffect(() => {
     fetchMyRecipes();
     fetchPublicRecipes();
   }, [fetchMyRecipes, fetchPublicRecipes]);
 
-  // 1. Coleção do Utilizador para Seleção/Sorteio (Minhas + Favoritas)
   const myCollection = useMemo(() => {
     const favoritedPublicRecipes = recipes.filter((r) => favorites.includes(r._id || r.id));
     const combined = [...myRecipes, ...favoritedPublicRecipes];
@@ -58,7 +57,6 @@ export default function RecipeWeek() {
     );
   }, [myRecipes, recipes, favorites]);
 
-  // Map completo para exibir detalhes da receita no card
   const allKnownRecipes = useMemo(() => {
     const combined = [...recipes, ...myRecipes];
     return Array.from(
@@ -66,7 +64,6 @@ export default function RecipeWeek() {
     );
   }, [recipes, myRecipes]);
 
-  // 2. Estados dos Filtros com Inicialização Lazy
   const [selectedDays, setSelectedDays] = useState(() => {
     return savedStorage?.selectedDays || {
       monday: true,
@@ -85,14 +82,11 @@ export default function RecipeWeek() {
   const [filterGluten, setFilterGluten] = useState(() => savedStorage?.filters?.filterGluten || false);
   const [restrictionsInput, setRestrictionsInput] = useState(() => savedStorage?.filters?.restrictionsInput || '');
 
-  // 3. Estado do Planeamento Semanal
   const [weeklyPlan, setWeeklyPlan] = useState(() => savedStorage?.plan || {});
 
-  // 4. Controle do Modal
   const [modalDayKey, setModalDayKey] = useState(null);
   const [modalSearch, setModalSearch] = useState('');
 
-  // Carregar/Sincronizar APENAS o plano de receitas vindo da API ao iniciar
   useEffect(() => {
     async function loadPlanFromApi() {
       if (!currentUserId) return;
@@ -118,7 +112,6 @@ export default function RecipeWeek() {
     loadPlanFromApi();
   }, [currentUserId]);
 
-  // Auto-Save no localStorage sempre que qualquer estado de filtro/plano mudar
   useEffect(() => {
     if (!currentUserId) return;
 
@@ -149,6 +142,25 @@ export default function RecipeWeek() {
       } catch (error) {
         console.error('Erro ao sincronizar planeamento com o servidor:', error);
       }
+    }
+  };
+
+  const [sendingEmail, setSendingEmail] = useState(false);
+
+  const handleSendEmail = async () => {
+    if (Object.keys(weeklyPlan).length === 0) {
+      toast.error('O seu cardápio está vazio! Adicione receitas antes de enviar por e-mail.');
+      return;
+    }
+
+    try {
+      setSendingEmail(true);
+      const response = await api.post('/menu/send-email', { plan: weeklyPlan });
+      toast.success(response.data.message || 'Cardápio enviado para o seu e-mail com sucesso!');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Erro ao enviar o cardápio por e-mail.');
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -189,7 +201,7 @@ export default function RecipeWeek() {
     const pool = getFilteredCollection();
 
     if (pool.length === 0) {
-      alert('Nenhuma receita encontrada com os filtros selecionados na sua coleção!');
+      toast.error('Nenhuma receita encontrada com os filtros selecionados na sua coleção!');
       return;
     }
 
@@ -216,7 +228,7 @@ export default function RecipeWeek() {
   const handleRandomizeDay = (dayKey) => {
     const pool = getFilteredCollection();
     if (pool.length === 0) {
-      alert('Nenhuma receita atende aos filtros atuais para ser sorteada!');
+      toast.error('Nenhuma receita atende aos filtros atuais para ser sorteada!');
       return;
     }
     const randomRecipe = getRandomRecipe(pool);
@@ -257,7 +269,6 @@ export default function RecipeWeek() {
       <h2 className="recipe-week-title">Planeador Semanal</h2>
 
       <div className="recipe-week-layout">
-        {/* PAINEL LATERAL DE CONFIGURAÇÕES */}
         <aside className="recipe-week-sidebar">
           <div className="recipe-week-days-box">
             <div className="recipe-week-section-label">
@@ -280,7 +291,6 @@ export default function RecipeWeek() {
 
           <hr className="recipe-week-divider" />
 
-          {/* Filtros de Dieta */}
           <div className="recipe-week-filters-group">
             <strong className="recipe-week-section-label">Filtros</strong>
 
@@ -325,7 +335,6 @@ export default function RecipeWeek() {
             </label>
           </div>
 
-          {/* Restrições Adicionais */}
           <div className="recipe-week-restrictions-group">
             <div className="recipe-week-section-label">Restrições Adicionais:</div>
             <input
@@ -338,7 +347,6 @@ export default function RecipeWeek() {
             <div className="recipe-week-small-help">Separadas por vírgula</div>
           </div>
 
-          {/* Botões do Painel Lateral */}
           <div className="recipe-week-actions">
             <button onClick={handleGenerateMenu} className="btn-generate-menu">
               Gerar Cardápio
@@ -346,10 +354,16 @@ export default function RecipeWeek() {
             <button onClick={handleClearMenu} className="btn-clear-menu">
               Limpar Cardápio
             </button>
+            <button
+              onClick={handleSendEmail}
+              className="btn-send-email-menu"
+              disabled={sendingEmail}
+            >
+              {sendingEmail ? 'A enviar...' : '✉️ Enviar por E-mail'}
+            </button>
           </div>
         </aside>
 
-        {/* GRADE DOS CARDS */}
         <main className="recipe-week-grid">
           {DAYS_OF_WEEK.map((day) => {
             const recipeId = weeklyPlan[day.key];
@@ -360,12 +374,12 @@ export default function RecipeWeek() {
 
             return (
               <div key={day.key} className="recipe-week-card">
-                <div className="recipe-week-card-header">{day.label}</div>
+                <div>
 
-                <div className="recipe-week-card-content">
                   {recipe ? (
-                    <>
+                    <div className="recipe-week-card-content">
                       <div>
+                        <div className="recipe-week-card-header">{day.label}</div>
                         <div className="recipe-week-img-wrapper">
                           <img
                             src={recipe.img || defaultIMG}
@@ -380,52 +394,58 @@ export default function RecipeWeek() {
 
                       <div className="recipe-week-card-actions">
                         <button
+                          title='Escolher'
                           onClick={() => setModalDayKey(day.key)}
                           className="card-btn card-btn-choose"
                         >
-                          Escolher
+                          Buscar
                         </button>
                         <button
+                          title='Sortear'
                           onClick={() => handleRandomizeDay(day.key)}
                           className="card-btn card-btn-randomize"
                         >
                           Sortear
                         </button>
                         <button
+                          title='Ver Receita'
                           onClick={() => navigate(`/recipe/${recipe._id || recipe.id}`)}
                           className="card-btn card-btn-view"
                         >
                           Ver
                         </button>
                         <button
+                          title='Remover do dia'
                           onClick={() => handleRemoveFromDay(day.key)}
                           className="card-btn card-btn-remove"
                         >
-                          Excluir
+                          Apagar
                         </button>
                       </div>
-                    </>
+                    </div>
                   ) : (
-                    <div className="recipe-week-card-empty">
-                      <div className="recipe-week-img-wrapper">
-                        <img
-                          src={weekIMG}
-                          className="recipe-week-card-img"
-                        />
+                    <div className="recipe-week-card-content">
+                      <div>
+                        <div className="recipe-week-card-header">{day.label}</div>
+                        <div className="recipe-week-img-wrapper">
+                          <img
+                            src={weekIMG}
+                            className="recipe-week-card-img"
+                          />
+                        </div>
+                        <p className="recipe-week-card-recipe-title">Dia sem receita</p>
+                        <p className="recipe-week-card-recipe-description">Clique em <strong>Buscar</strong> ou em <strong>Sortear</strong> para adicionar uma Receita</p>
                       </div>
-                      <p className="recipe-week-card-recipe-title">Dia sem receita</p>
                       <div className="recipe-week-empty-actions">
                         <button
                           onClick={() => setModalDayKey(day.key)}
                           className="card-btn card-btn-choose"
-                          style={{ padding: '8px 16px' }}
                         >
-                          Escolher
+                          Buscar
                         </button>
                         <button
                           onClick={() => handleRandomizeDay(day.key)}
                           className="card-btn card-btn-randomize"
-                          style={{ padding: '8px 16px' }}
                         >
                           Sortear
                         </button>
@@ -439,7 +459,6 @@ export default function RecipeWeek() {
         </main>
       </div>
 
-      {/* MODAL DE ESCOLHA DA RECEITA */}
       {modalDayKey && (
         <div className="recipe-week-modal-overlay">
           <div className="recipe-week-modal-container">
@@ -486,7 +505,6 @@ export default function RecipeWeek() {
                       <button
                         onClick={() => handleSelectRecipeForDay(recId)}
                         className="card-btn card-btn-view"
-                        style={{ padding: '6px 12px' }}
                       >
                         Adicionar
                       </button>

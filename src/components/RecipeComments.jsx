@@ -1,7 +1,11 @@
-//recipeComments
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useComments } from '../context/CommentsContext';
+
+import { toast } from 'sonner';
+
+import '../styles/RecipeDetails.css';
+import '../styles/index.css';
 
 export default function RecipeComments({ recipeId }) {
   const { user } = useAuth();
@@ -46,13 +50,24 @@ export default function RecipeComments({ recipeId }) {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Deseja apagar o comentário?')) {
-      const result = await deleteComment(id);
-      if (!result?.success && result?.message) {
-        alert(result.message);
-      }
-    }
+  const handleDelete = (id) => {
+    toast('Deseja apagar o comentário?', {
+      action: {
+        label: 'Sim',
+        onClick: async () => {
+          const result = await deleteComment(id);
+          if (!result?.success && result?.message) {
+            toast.error(result.message);
+          } else if (result?.success) {
+            toast.success('Comentário apagado com sucesso!');
+          }
+        },
+      },
+      cancel: {
+        label: 'Não',
+        onClick: () => { },
+      },
+    });
   };
 
   const formatDate = (isoString) => {
@@ -79,7 +94,6 @@ export default function RecipeComments({ recipeId }) {
         Comentários ({comments.length})
       </h3>
 
-      {/* Formulário de Envio */}
       {user ? (
         <form onSubmit={handleSubmit} className="comments-form">
           <textarea
@@ -103,7 +117,6 @@ export default function RecipeComments({ recipeId }) {
         </p>
       )}
 
-      {/* Lista de Comentários */}
       {loading ? (
         <p className="comments-empty">A carregar comentários...</p>
       ) : comments.length === 0 ? (
@@ -121,7 +134,6 @@ export default function RecipeComments({ recipeId }) {
               currentUserId && authorId && String(currentUserId) === String(authorId)
             );
 
-            // Permissão de exclusão: Autor OU Admin
             const canDelete = isAuthor || isAdmin;
 
             const isEditingThis = editingId === commentId;
@@ -165,19 +177,16 @@ export default function RecipeComments({ recipeId }) {
 
                     {(isAuthor || canDelete) && (
                       <div className="comment-actions" style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
-                        {/* Apenas o AUTOR pode EDITAR */}
                         {isAuthor && (
                           <button
                             onClick={() => handleStartEdit(comment)}
                             title="Editar comentário"
                             className="btn-edit-comment"
-                            style={{ background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', padding: 0 }}
                           >
                             Editar
                           </button>
                         )}
 
-                        {/* AUTOR OU ADMIN podem EXCLUIR */}
                         {canDelete && (
                           <button
                             onClick={() => handleDelete(commentId)}

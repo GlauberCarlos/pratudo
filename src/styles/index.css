@@ -1,13 +1,28 @@
-/* Reset básico e variáveis/estilos globais */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+:root {
+  --branco: #FFFFFF;
+  --verde1: #66BB6A;
+  --verde2: #C8E6C9;
+  --verde3: #ECFFED;
+  --laranja1: #FFA726;
+  --laranja2: #FFF3E0;
+  --laranja3: #FFE0B2;
+  --vermelho: #EF5350;
+  --cinza1: #5D5D5D;
+  --cinza2: #FAFAFA;
+  --cinza3: #E5E5E5;
+  --cinza4: #888888;
+  --azul: #007bff;
+}
+
 body {
-  background-color: #ffffff; /* Fundo global em branco completo */
-  color: #5D5D5D; /* Cinza-1 como texto padrão */
+  background-color: var(--branco);
+  color: var(--cinza1);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   min-height: 100vh;
 }

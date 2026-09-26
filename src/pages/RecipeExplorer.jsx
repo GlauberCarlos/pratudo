@@ -1,4 +1,3 @@
-//explorer
 import { useState, useMemo, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
@@ -6,6 +5,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useFavorites } from '../context/FavoritesContext';
 import { useRatings } from '../context/RatingsContext';
 import { useRecipes } from '../context/RecipesContext';
+
+import { toast } from 'sonner';
 
 import defaultIMG from '../assets/praTudo-placeholder.svg'
 import '../styles/RecipeList.css';
@@ -74,15 +75,25 @@ export default function RecipeExplorer() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir esta receita?')) {
-      const result = await deleteRecipe(id);
-      if (!result?.success && result?.message) {
-        alert(result.message);
-      }
-    }
+    toast('Tem certeza que deseja excluir esta receita?', {
+      action: {
+        label: 'Sim',
+        onClick: async () => {
+          const result = await deleteRecipe(id);
+          if (!result?.success && result?.message) {
+            toast.error(result.message);
+          } else if (result?.success) {
+            toast.success('Receita apagada com sucesso!');
+          }
+        },
+      },
+      cancel: {
+        label: 'Não',
+        onClick: () => { },
+      },
+    });
   };
 
-  // 1. Filtra receitas de terceiros
   const publicThirdPartyRecipes = useMemo(() => {
     return recipes.filter((recipe) => {
       const authorId = recipe.author?._id || recipe.author;
@@ -90,7 +101,6 @@ export default function RecipeExplorer() {
     });
   }, [recipes, currentUserId]);
 
-  // 2. Anexa avaliações
   const recipesWithRatings = useMemo(() => {
     return publicThirdPartyRecipes.map((recipe) => {
       const { rating, ratingCount } = getRecipeRating
@@ -100,7 +110,6 @@ export default function RecipeExplorer() {
     });
   }, [publicThirdPartyRecipes, getRecipeRating]);
 
-  // 3. Ordenação
   const sortedRecipes = useMemo(() => {
     return [...recipesWithRatings].sort((a, b) => {
       switch (sortBy) {
@@ -124,7 +133,6 @@ export default function RecipeExplorer() {
         <h2 className="recipes-page-title">Explorar Receitas da Comunidade</h2>
       </div>
 
-      {/* Painel de Filtros */}
       <div className="recipes-filter-panel">
         <div className="filter-row-1">
           <input
@@ -195,11 +203,10 @@ export default function RecipeExplorer() {
         </div>
       </div>
 
-      {/* Grade de Receitas */}
       {loading || isInitialLoad ? (
         <p style={{ textAlign: 'center', padding: '40px 0' }}>A carregar receitas...</p>
       ) : sortedRecipes.length === 0 ? (
-        <p style={{ color: '#5D5D5D', textAlign: 'center', padding: '40px 0' }}>
+        <p style={{ color: 'var(--cinza1)', textAlign: 'center', padding: '40px 0' }}>
           Nenhuma receita encontrada com os filtros selecionados.
         </p>
       ) : (
@@ -224,7 +231,7 @@ export default function RecipeExplorer() {
                       className="favorite-btn-overlay"
                       title={isFav ? 'Remover dos Favoritos' : 'Favoritar'}
                     >
-                      {isFav ? '❤️' : '🤍'}
+                      {isFav ? '🧡' : '🤍'}
                     </button>
                   )}
                 </div>
@@ -255,7 +262,6 @@ export default function RecipeExplorer() {
                       Ver Detalhes
                     </Link>
 
-                    {/* Excluir de terceiros visível apenas para o ADMIN */}
                     {isAdmin && (
                       <button
                         onClick={() => handleDelete(recipe._id)}

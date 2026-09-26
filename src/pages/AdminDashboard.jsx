@@ -13,7 +13,6 @@ export default function AdminDashboard() {
   const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Busca lista de usuários
   const loadUsers = async () => {
     try {
       setLoading(true);
@@ -79,7 +78,6 @@ export default function AdminDashboard() {
     <div className="admin-container">
       <h2 className="admin-title">Painel do Administrador</h2>
 
-      {/* Cartões de Estatísticas */}
       <div className="stats-grid">
         <div className="stat-card stat-card-total">
           <h4 className="stat-card-title">Total de Usuários</h4>
@@ -95,7 +93,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Fila de Solicitações de Admin */}
       <section className="admin-section">
         <h3 className="admin-section-title">Solicitações de Administrador Pendentes</h3>
         {pendingAdmins.length === 0 ? (
@@ -139,7 +136,6 @@ export default function AdminDashboard() {
         )}
       </section>
 
-      {/* Lista Geral de Usuários */}
       <section className="admin-section">
         <h3 className="admin-section-title">Gerenciamento de Usuários</h3>
         <div className="table-responsive">
@@ -165,7 +161,6 @@ export default function AdminDashboard() {
                     <td>{u.status}</td>
                     <td>
                       <div className="actions-cell">
-                        {/* Se for o próprio admin, esconde ou desativa o botão de editar */}
                         {!isSelf ? (
                           <Link
                             to={`/admin/users/edit/${u._id}`}
@@ -177,27 +172,45 @@ export default function AdminDashboard() {
                           <span
                             className="btn-action btn-action-disabled"
                             title="Para editar o seu próprio perfil, aceda à página de Perfil"
-                            style={{ opacity: 0.5, cursor: 'not-allowed', pointerEvents: 'none' }}
                           >
                             Editar
                           </span>
                         )}
 
-                        <button
-                          onClick={() => handleToggleStatus(u._id)}
-                          className="btn-action btn-action-toggle"
-                          disabled={isSelf} // Também previne que desative a sua própria conta
-                        >
-                          {u.status === 'active' ? 'Desativar' : 'Ativar'}
-                        </button>
+                        {!isSelf ? (
+                          <button
+                            onClick={() => handleToggleStatus(u._id)}
+                            className="btn-action btn-action-toggle"
+                          >
+                            {u.status === 'active' ? 'Desativar' : 'Ativar'}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleToggleStatus(u._id)}
+                            className="btn-action btn-action-toggle btn-action-disabled"
+                            disabled={isSelf}
+                          >
+                            {u.status === 'active' ? 'Desativar' : 'Ativar'}
+                          </button>
+                        )}
 
-                        <button
-                          onClick={() => handleDelete(u._id)}
-                          className="btn-action btn-action-delete"
-                          disabled={isSelf} // Previne que exclua a sua própria conta
-                        >
-                          Excluir
-                        </button>
+                        {!isSelf ? (
+                          <button
+                            onClick={() => handleDelete(u._id)}
+                            className="btn-action btn-action-delete"
+                            disabled={isSelf}
+                          >
+                            Excluir
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleDelete(u._id)}
+                            className="btn-action btn-action-delete btn-action-disabled"
+                            disabled={isSelf}
+                          >
+                            Excluir
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

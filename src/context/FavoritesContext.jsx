@@ -19,7 +19,7 @@ export function FavoritesProvider({ children }) {
 
     try {
       setLoadingFavorites(true);
-      const response = await api.get('/users/favorites'); // Ajuste o endpoint conforme a sua API (ex: /users/favorites ou /favorites)
+      const response = await api.get('/users/favorites'); 
       
       const favoriteIds = response.data.map((item) =>
         typeof item === 'object' ? item._id || item.id : item
@@ -27,7 +27,7 @@ export function FavoritesProvider({ children }) {
       setFavorites(favoriteIds);
     } catch (error) {
       console.error('Erro ao carregar favoritos da API:', error);
-      // Fallback em caso de erro na rede
+      // Fallback em caso de erro
       try {
         const saved = localStorage.getItem(`@my-menu:favorites_${currentUserId}`);
         setFavorites(saved ? JSON.parse(saved) : []);
@@ -39,12 +39,10 @@ export function FavoritesProvider({ children }) {
     }
   }, [currentUserId]);
 
-  // Carrega favoritos sempre que o utilizador autenticado muda
   useEffect(() => {
     fetchFavorites();
   }, [fetchFavorites]);
 
-  // Adiciona ou remove uma receita dos favoritos
   const toggleFavorite = async (recipeId) => {
     if (!currentUserId || !recipeId) {
       alert('Precisa de estar autenticado para favoritar receitas!');
@@ -54,7 +52,6 @@ export function FavoritesProvider({ children }) {
     const idString = String(recipeId);
     const exists = favorites.some((id) => String(id) === idString);
 
-    // Atualização Otimista (Muda o estado local imediatamente)
     setFavorites((prev) =>
       exists
         ? prev.filter((id) => String(id) !== idString)
@@ -63,14 +60,11 @@ export function FavoritesProvider({ children }) {
 
     try {
       if (exists) {
-        // Remove dos favoritos na API
         await api.delete(`/users/favorites/${idString}`);
       } else {
-        // Adiciona aos favoritos na API
         await api.post(`/users/favorites/${idString}`);
       }
 
-      // Atualiza backup no localStorage
       const updatedList = exists
         ? favorites.filter((id) => String(id) !== idString)
         : [...favorites, idString];
@@ -78,7 +72,6 @@ export function FavoritesProvider({ children }) {
 
     } catch (error) {
       console.error('Erro ao atualizar favorito na API:', error);
-      // Reverte a alteração em caso de erro no servidor
       setFavorites((prev) =>
         exists
           ? [...prev, idString]

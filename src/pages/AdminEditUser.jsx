@@ -4,6 +4,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
 
+import { toast } from 'sonner';
+
 import '../styles/Auth.css';
 import '../styles/index.css';
 
@@ -43,7 +45,7 @@ export default function AdminEditUser() {
   useEffect(() => {
     const currentUserId = currentUser?._id || currentUser?.id;
     if (currentUserId && String(currentUserId) === String(id)) {
-      alert('Para editar os seus próprios dados, utilize a página de Perfil.');
+      toast.error('Para editar os seus próprios dados, utilize a página de Perfil.');
       navigate('/edit-profile');
       return;
     }

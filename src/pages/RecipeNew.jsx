@@ -1,9 +1,11 @@
-// RecipeNew
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecipes } from '../context/RecipesContext';
 
+import { toast } from 'sonner';
+
 import '../styles/RecipeForm.css';
+import '../styles/RecipeDetails.css';
 import '../styles/index.css';
 
 export default function RecipeNew() {
@@ -13,7 +15,8 @@ export default function RecipeNew() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Fácil');
-  const [img, setImg] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
   const [prepTime, setPrepTime] = useState('');
   const [servings, setServings] = useState('');
   const [ingredients, setIngredients] = useState('');
@@ -24,6 +27,29 @@ export default function RecipeNew() {
   const [isVegan, setIsVegan] = useState(false);
   const [isLactoseFree, setIsLactoseFree] = useState(false);
   const [isGlutenFree, setIsGlutenFree] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 3 * 1024 * 1024) {
+        toast.error('A imagem deve ter no máximo 3MB.');
+        return;
+      }
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview('');
+
+    const fileInput = document.getElementById('recipe-img');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,29 +74,42 @@ export default function RecipeNew() {
       .map((item) => item.trim())
       .filter(Boolean);
 
-    const newRecipe = {
-      title,
-      description,
-      category,
-      img: img.trim() || "",
-      prepTime: `${prepTime} min`,
-      servings: `${servings} porções`,
-      ingredients: ingredientsArray,
-      instructions: instructionsArray,
-      restrictions: restrictionsArray,
-      isPublic,
-      isVegetarian,
-      isVegan,
-      isLactoseFree,
-      isGlutenFree,
-    };
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('category', category);
+    formData.append('prepTime', `${prepTime} min`);
+    formData.append('servings', `${servings} porções`);
 
-    const result = await addRecipe(newRecipe);
-    if (result.success) {
-      alert('Receita salva com sucesso!');
-      navigate('/my-recipes');
-    } else {
-      alert(result.message);
+    // Arrays precisam de ser serializados em JSON ou adicionados item a item
+    formData.append('ingredients', JSON.stringify(ingredientsArray));
+    formData.append('instructions', JSON.stringify(instructionsArray));
+    formData.append('restrictions', JSON.stringify(restrictionsArray));
+
+    formData.append('isPublic', isPublic);
+    formData.append('isVegetarian', isVegetarian);
+    formData.append('isVegan', isVegan);
+    formData.append('isLactoseFree', isLactoseFree);
+    formData.append('isGlutenFree', isGlutenFree);
+
+    if (imageFile) {
+      formData.append('img', imageFile);
+    }
+
+    try {
+      setLoading(true);
+      const result = await addRecipe(formData);
+
+      if (result.success) {
+        toast.success('Receita salva com sucesso!');
+        navigate('/my-recipes');
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      alert('Erro inesperado ao guardar a receita.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -82,6 +121,25 @@ export default function RecipeNew() {
           Voltar
         </button>
       </div>
+
+      {imagePreview && (
+        <div className="recipe-image-preview-wrapper">
+          <img
+            src={imagePreview}
+            alt="Pré-visualização"
+            className="recipe-image-preview"
+          />
+          <button
+            type="button"
+            onClick={handleRemoveImage}
+            className="btn-remove-image"
+            title="Remover foto"
+            aria-label="Remover foto"
+          >
+            🗑️
+          </button>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="recipe-form">
         <div className="form-group">
@@ -123,13 +181,13 @@ export default function RecipeNew() {
           </div>
 
           <div className="form-group-flex">
-            <label className="form-label">URL da Imagem</label>
+            <label htmlFor="recipe-img" className="form-label-img">Escolher foto</label>
             <input
-              type="url"
-              value={img}
-              onChange={(e) => setImg(e.target.value)}
-              placeholder="https://exemplo.com/imagem.jpg"
-              className="form-input"
+              type="file"
+              id="recipe-img"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="form-label-input"
             />
           </div>
         </div>
@@ -257,8 +315,8 @@ export default function RecipeNew() {
           </label>
         </div>
 
-        <button type="submit" className="btn-submit-recipe">
-          Guardar Receita
+        <button type="submit" className="btn-submit-recipe" disabled={loading}>
+          {loading ? 'A guardar e enviar imagem...' : 'Guardar Receita'}
         </button>
       </form>
     </div>

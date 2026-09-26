@@ -2,6 +2,8 @@ import { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+import { toast } from 'sonner';
+
 import '../styles/Auth.css';
 import '../styles/index.css';
 
@@ -52,28 +54,28 @@ export default function EditProfile() {
     setSuccessMsg('');
 
     if (name.trim().length <= 2) {
-      alert('O Nome deve ter mais de 2 caracteres.');
+      toast.error('O Nome deve ter mais de 2 caracteres.');
       return;
     }
     if (lastName.trim().length <= 2) {
-      alert('O Apelido deve ter mais de 2 caracteres.');
+      toast.error('O Apelido deve ter mais de 2 caracteres.');
       return;
     }    
     if (!birthDate || !validateAge(birthDate)) {
-      alert('Deve ter pelo menos 16 anos para se registar.');
+      toast.error('Deve ter pelo menos 16 anos para se registar.');
       return;
     }
 
     if (password) {
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
       if (!passwordRegex.test(password)) {
-        alert(
+        toast.error(
           'A senha deve ter no mínimo 8 caracteres, incluindo 1 letra maiúscula, 1 minúscula, 1 número e 1 caractere especial (@$!%*?&).'
         );
         return;
       }
       if (password !== confirmPassword) {
-        alert('As senhas não coincidem!');
+        toast.error('As senhas não coincidem!');
         return;
       }
     }
@@ -175,7 +177,7 @@ export default function EditProfile() {
       </form>
 
       <div className="profile-actions-cancel">
-        <button className="btn-profile-cancel" onClick={cancelEdit}>
+        <button className="btn-profile-delete" onClick={cancelEdit}>
           Cancelar Alterações
         </button>
       </div>

@@ -61,7 +61,6 @@ export default function MyComments() {
 
             return (
               <div key={comment._id} className="comment-card">
-                {/* Imagem da receita */}
                 <div className="comment-card-image-wrapper">
                   <img
                     src={recipe?.img || defaultIMG}
@@ -70,7 +69,6 @@ export default function MyComments() {
                   />
                 </div>
 
-                {/* Conteúdo do Card */}
                 <div className="comment-card-content">
                   <div>
                     <h3 className="comment-card-recipe-title">
@@ -79,7 +77,6 @@ export default function MyComments() {
                     <p className="comment-card-text">"{comment.content || comment.text}"</p>
                   </div>
 
-                  {/* Botões de Ação */}
                   <div className="comment-card-actions">
                     {recipe?._id && (
                       <Link to={`/recipe/${recipe._id}`} className="btn-action btn-view">

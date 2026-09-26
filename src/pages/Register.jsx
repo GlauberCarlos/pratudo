@@ -1,4 +1,3 @@
-//register
 import { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
@@ -33,40 +32,40 @@ export default function Register() {
     e.preventDefault();
 
     if (name.trim().length <= 2) {
-      alert('O Nome deve ter mais de 2 caracteres.');
+      toast.error('O Nome deve ter mais de 2 caracteres.');
       return;
     }
     if (lastName.trim().length <= 2) {
-      alert('O Apelido deve ter mais de 2 caracteres.');
+      toast.error('O Apelido deve ter mais de 2 caracteres.');
       return;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      alert('Por favor, insira um e-mail válido.');
+      toast.error('Por favor, insira um e-mail válido.');
       return;
     }
     if (!birthDate || !validadeAge(birthDate)) {
-      alert('Deve ter pelo menos 16 anos para se registar.');
+      toast.error('Deve ter pelo menos 16 anos para se registar.');
       return;
     }
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(password)) {
-      alert(
+      toast.error(
         'A senha deve ter no mínimo 8 caracteres, incluindo 1 letra maiúscula, 1 minúscula, 1 número e 1 caractere especial (@$!%*?&).'
       );
       return;
     }
     if (password !== confirmPassword) {
-      alert('As senhas não coincidem!');
+      toast.error('As senhas não coincidem!');
       return;
     }
 
     const result = await register(name, lastName, email, birthDate, password, requestAdmin);
     if (result.success) {
-      alert('Cadastro realizado com sucesso!');
+      toast.success('Cadastro realizado com sucesso!');
       navigate('/login');
     } else {
-      alert(result.message);
+      toast.error(result.message);
     }
   };
 
