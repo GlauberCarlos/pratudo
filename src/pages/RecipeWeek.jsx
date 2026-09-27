@@ -268,6 +268,10 @@ export default function RecipeWeek() {
     <div className="recipe-week-container main-container">
       <h2 className="recipe-week-title">Planeador Semanal</h2>
 
+      <div className="recipes-header-subtitle">
+        Usa suas receitas em cada dia da semana!
+      </div>
+
       <div className="recipe-week-layout">
         <aside className="recipe-week-sidebar">
           <div className="recipe-week-days-box">
@@ -504,7 +508,7 @@ export default function RecipeWeek() {
                       </div>
                       <button
                         onClick={() => handleSelectRecipeForDay(recId)}
-                        className="card-btn card-btn-view"
+                        className="card-btn-add"
                       >
                         Adicionar
                       </button>

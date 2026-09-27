@@ -49,13 +49,13 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const register = async (name, lastName, email, birthdate, password, requestAdmin) => {
+  const register = async (name, lastName, email, birthDate, password, requestAdmin) => {
     try {
       await api.post('/auth/register', {
         name,
         lastName,
         email,
-        birthdate,
+        birthDate,
         password,
         role: requestAdmin ? 'admin_pending' : 'user',
       });

@@ -269,19 +269,16 @@ export default function RecipeEdit() {
 
         <div className="form-row">
           <div className="form-group-flex">
-            <label className="form-label">Categoria *</label>
+            <label className="form-label">Dificuldade *</label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className="form-input"
               required
             >
-              <option value="Entrada">Entrada</option>
-              <option value="Almoço">Almoço</option>
-              <option value="Jantar">Jantar</option>
-              <option value="Sobremesa">Sobremesa</option>
-              <option value="Lanche">Lanche</option>
-              <option value="Bebidas">Bebidas</option>
+              <option value="Fácil">Fácil</option>
+              <option value="Médio">Médio</option>
+              <option value="Difícil">Difícil</option>
             </select>
           </div>
 
